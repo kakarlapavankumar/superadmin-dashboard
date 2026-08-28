@@ -41,11 +41,7 @@ export default function Dashboard() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <PlatformHealth
-          items={
-            health as unknown as Parameters<typeof PlatformHealth>[0]["items"]
-          }
-        />
+        <PlatformHealth health={health} />
 
         <RecentActivities
           activities={activities.map((activity) => ({
