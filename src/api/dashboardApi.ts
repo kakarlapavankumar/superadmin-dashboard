@@ -1,5 +1,22 @@
-import { getMockDashboard } from "../mock/mockApi";
+import {
+  dashboardStats,
+  platformHealth,
+  tenantGrowth,
+  activities,
+} from "../mock/dashboard";
 
-export async function getDashboard() {
-  return getMockDashboard();
+export async function getDashboardStats() {
+  return dashboardStats;
+}
+
+export async function getPlatformHealth() {
+  return platformHealth;
+}
+
+export async function getTenantGrowth() {
+  return tenantGrowth;
+}
+
+export async function getRecentActivities() {
+  return activities;
 }

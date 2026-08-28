@@ -2,18 +2,20 @@ import { Outlet } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import Header from "./Header";
 
-export default function Layout() {
+function Layout() {
   return (
-    <div className="flex min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-slate-50">
       <Sidebar />
 
-      <div className="flex-1">
+      <div className="lg:pl-64">
         <Header />
 
-        <main className="p-6">
+        <main>
           <Outlet />
         </main>
       </div>
     </div>
   );
 }
+
+export default Layout;

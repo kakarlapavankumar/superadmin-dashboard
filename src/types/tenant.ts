@@ -1,6 +1,6 @@
 export type TenantStatus = "Active" | "Inactive";
 
-export type SubscriptionPlan = "Basic" | "Pro" | "Enterprise";
+export type Subscription = "Basic" | "Pro" | "Enterprise";
 
 export interface Tenant {
   id: string;
@@ -9,7 +9,7 @@ export interface Tenant {
   adminName: string;
   adminEmail: string;
   phone: string;
-  subscription: SubscriptionPlan;
+  subscription: Subscription;
   country: string;
   timeZone: string;
   status: TenantStatus;
@@ -20,24 +20,16 @@ export interface Tenant {
   createdAt: string;
 }
 
-export interface TenantFilters {
-  search: string;
-  status: string;
-  plan: string;
-  page: number;
-  limit: number;
-  sortBy: string;
-  sortOrder: "asc" | "desc";
-}
-
-export interface CreateTenantRequest {
+export interface CreateTenantInput {
   tenantName: string;
   tenantCode: string;
   adminName: string;
   adminEmail: string;
   phone: string;
-  subscription: SubscriptionPlan;
+  subscription: Subscription;
   country: string;
   timeZone: string;
   status: TenantStatus;
 }
+
+export type UpdateTenantInput = CreateTenantInput;

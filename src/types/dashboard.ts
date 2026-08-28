@@ -3,33 +3,24 @@ export interface DashboardStats {
   activeTenants: number;
   inactiveTenants: number;
   totalUsers: number;
-  activeLiciences: number;
+  activeLicenses: number;
 }
 
-export interface platformHealth {
-  apiGateway: string;
-  database: string;
-  server: string;
-  storage: string;
-  cpuUsage: string;
-  memoryUsage: string;
+export interface HealthItem {
+  name: string;
+  status: string;
+  type: "success" | "info" | "warning";
+}
+
+export interface Activity {
+  id: number;
+  title: string;
+  description: string;
+  time: string;
+  type: "success" | "info" | "warning";
 }
 
 export interface TenantGrowth {
   month: string;
   tenants: number;
-}
-
-export interface recentActivity {
-  id: string;
-  message: string;
-  date: string;
-  type: string;
-}
-
-export interface DashboardData {
-  stats: DashboardStats;
-  health: platformHealth;
-  growth: TenantGrowth[];
-  Activities: recentActivity[];
 }

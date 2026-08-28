@@ -1,113 +1,137 @@
-import { tenants } from "./tenants";
-import {
-  dashboardStats,
-  platformHealth,
-  growthData,
-  activities,
-} from "./dashboard";
+import { tenants as initialTenants } from "./tenants";
 
-import type { Tenant } from "../types/tenant";
+export type TenantStatus = "Active" | "Inactive";
 
-type CreateTenantInput = Omit<
-  Tenant,
-  "id" | "users" | "organizations" | "activeUsers" | "storage" | "createdAt"
->;
+let tenantStore = [...initialTenants];
 
-const delay = (ms = 500) => new Promise((resolve) => setTimeout(resolve, ms));
+type TenantInput = Partial<(typeof initialTenants)[number]> &
+  Record<string, unknown>;
 
-export async function getMockDashboard() {
-  await delay();
-
-  return {
-    stats: dashboardStats,
-    health: platformHealth,
-    growth: growthData,
-    activities,
-  };
+function delay(ms = 300) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-export async function getMockTenants(): Promise<Tenant[]> {
+export async function getMockTenants() {
   await delay();
 
-  return [...tenants];
+  return [...tenantStore];
 }
 
-export async function getMockTenant(id: number): Promise<Tenant> {
+export async function getMockTenant(id: string) {
   await delay();
 
-  const tenant = tenants.find((item) => String(item.id) === String(id));
+  return tenantStore.find((tenant) => String(tenant.id) === String(id));
+}
 
-  if (!tenant) {
-    throw new Error("Tenant not found");
+export async function createMockTenant(tenant: TenantInput) {
+  await delay();
+
+  const exists = tenantStore.some(
+    (item) =>
+      String("code" in item ? item.code : "").toLowerCase() ===
+      String(tenant.code).toLowerCase(),
+  );
+
+  if (exists) {
+    throw new Error("Tenant code already exists.");
   }
 
-  return { ...tenant };
-}
-
-export async function createMockTenant(
-  data: CreateTenantInput,
-): Promise<Tenant> {
-  await delay();
-
-  const tenant: Tenant = {
-    ...data,
+  const newTenant = {
+    ...tenant,
     id: String(Date.now()),
-    users: 0,
-    organizations: 0,
-    activeUsers: 0,
-    storage: 0,
-    createdAt: new Date().toISOString().split("T")[0],
-  };
+    status: tenant.status || "Active",
+    createdAt: new Date().toISOString(),
+    users: tenant.users ?? 0,
+  } as (typeof initialTenants)[number];
 
-  tenants.push(tenant);
+  tenantStore = [newTenant, ...tenantStore];
 
-  return tenant;
+  return newTenant;
 }
 
-export async function updateMockTenant(
-  id: number,
-  data: CreateTenantInput,
-): Promise<Tenant> {
+export async function updateMockTenant(id: string, updates: TenantInput) {
   await delay();
 
-  const index = tenants.findIndex((item) => String(item.id) === String(id));
+  const index = tenantStore.findIndex(
+    (tenant) => String(tenant.id) === String(id),
+  );
 
   if (index === -1) {
-    throw new Error("Tenant not found");
+    throw new Error("Tenant not found.");
   }
 
-  tenants[index] = {
-    ...tenants[index],
-    ...data,
+  const duplicateCode = tenantStore.some(
+    (tenant, tenantIndex) =>
+      tenantIndex !== index &&
+      String("code" in tenant ? tenant.code : "").toLowerCase() ===
+        String(updates.code).toLowerCase(),
+  );
+
+  if (duplicateCode) {
+    throw new Error("Tenant code already exists.");
+  }
+
+  tenantStore[index] = {
+    ...tenantStore[index],
+    ...updates,
   };
 
-  return { ...tenants[index] };
+  return tenantStore[index];
 }
 
-export async function activateMockTenant(id: number) {
+export async function activateMockTenant(id: string) {
   await delay();
 
-  const tenant = tenants.find((item) => String(item.id) === String(id));
+  const index = tenantStore.findIndex(
+    (tenant) => String(tenant.id) === String(id),
+  );
 
-  if (!tenant) {
-    throw new Error("Tenant not found");
+  if (index === -1) {
+    throw new Error("Tenant not found.");
   }
 
-  tenant.status = "Active";
+  tenantStore[index] = {
+    ...tenantStore[index],
+    status: "Active",
+  };
 
-  return { ...tenant };
+  return tenantStore[index];
 }
 
-export async function deactivateMockTenant(id: number) {
+export async function deactivateMockTenant(id: string) {
   await delay();
 
-  const tenant = tenants.find((item) => String(item.id) === String(id));
+  const index = tenantStore.findIndex(
+    (tenant) => String(tenant.id) === String(id),
+  );
 
-  if (!tenant) {
-    throw new Error("Tenant not found");
+  if (index === -1) {
+    throw new Error("Tenant not found.");
   }
 
-  tenant.status = "Inactive";
+  tenantStore[index] = {
+    ...tenantStore[index],
+    status: "Inactive",
+  };
 
-  return { ...tenant };
+  return tenantStore[index];
+}
+
+export async function getMockTenantStats(id: string) {
+  await delay();
+
+  const tenant = tenantStore.find((item) => String(item.id) === String(id));
+
+  if (!tenant) {
+    throw new Error("Tenant not found.");
+  }
+
+  const users = Number(tenant.users ?? 0);
+
+  return {
+    users,
+    organizations: Math.max(1, Math.ceil(users / 35)),
+    activeUsers: Math.round(users * 0.87),
+    storage: Math.min(95, Math.max(10, Math.round(users / 4))),
+  };
 }

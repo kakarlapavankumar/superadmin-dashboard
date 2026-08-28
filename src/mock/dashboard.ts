@@ -1,32 +1,12 @@
-import type { DashboardStats } from "../types/dashboard";
-
-type GrowthData = {
-  month: string;
-  tenants: number;
-};
-
-type Activity = {
-  id: number;
-  message: string;
-  time: string;
-  type: "create" | "activate" | "update" | "license" | "deactivate";
-};
-
-type PlatformHealthItem = {
-  name: string;
-  status: string;
-  value?: number;
-};
-
-export const dashboardStats: DashboardStats = {
+export const dashboardStats = {
   totalTenants: 125,
   activeTenants: 112,
   inactiveTenants: 13,
   totalUsers: 5240,
-  activeLiciences: 98,
+  activeLicenses: 98,
 };
 
-export const platformHealth: PlatformHealthItem[] = [
+export const platformHealth = [
   {
     name: "API Gateway",
     status: "Healthy",
@@ -42,60 +22,81 @@ export const platformHealth: PlatformHealthItem[] = [
   {
     name: "Storage",
     status: "68%",
-    value: 68,
   },
   {
     name: "CPU Usage",
     status: "42%",
-    value: 42,
   },
   {
     name: "Memory Usage",
     status: "61%",
-    value: 61,
   },
 ];
 
-export const growthData: GrowthData[] = [
-  { month: "Jan", tenants: 70 },
-  { month: "Feb", tenants: 78 },
-  { month: "Mar", tenants: 85 },
-  { month: "Apr", tenants: 92 },
-  { month: "May", tenants: 105 },
-  { month: "Jun", tenants: 112 },
-  { month: "Jul", tenants: 118 },
-  { month: "Aug", tenants: 125 },
+export const tenantGrowth = [
+  {
+    month: "Jan",
+    tenants: 82,
+  },
+  {
+    month: "Feb",
+    tenants: 91,
+  },
+  {
+    month: "Mar",
+    tenants: 98,
+  },
+  {
+    month: "Apr",
+    tenants: 105,
+  },
+  {
+    month: "May",
+    tenants: 113,
+  },
+  {
+    month: "Jun",
+    tenants: 118,
+  },
+  {
+    month: "Jul",
+    tenants: 122,
+  },
+  {
+    month: "Aug",
+    tenants: 125,
+  },
 ];
 
-export const activities: Activity[] = [
+export const activities = [
   {
     id: 1,
-    message: "New tenant created",
-    time: "10 minutes ago",
-    type: "create",
+    title: "New tenant created",
+    description: "CloudPeak Systems was created",
+    time: "5 minutes ago",
   },
   {
     id: 2,
-    message: "Tenant activated",
-    time: "30 minutes ago",
-    type: "activate",
+    title: "Tenant activated",
+    description: "TechNova Solutions was activated",
+    time: "25 minutes ago",
   },
   {
     id: 3,
-    message: "Tenant configuration updated",
+    title: "Tenant configuration updated",
+    description: "Acme Corporation configuration was updated",
     time: "1 hour ago",
-    type: "update",
   },
   {
     id: 4,
-    message: "License renewed",
+    title: "License renewed",
+    description: "Enterprise license was renewed",
     time: "2 hours ago",
-    type: "license",
   },
   {
     id: 5,
-    message: "Tenant deactivated",
+    title: "Tenant deactivated",
+    description: "Alpha Technologies was deactivated",
     time: "3 hours ago",
-    type: "deactivate",
   },
 ];
