@@ -1,9 +1,4 @@
-import type {
-  Tenant,
-  TenantStats,
-  CreateTenantRequest,
-  UpdateTenantRequest,
-} from "../types/tenant";
+import type { Tenant, TenantFormData, TenantStats } from "../types/tenant";
 
 import {
   getMockTenants,
@@ -11,74 +6,42 @@ import {
   getMockTenantStats,
   createMockTenant,
   updateMockTenant,
+  deleteMockTenant,
   activateMockTenant,
   deactivateMockTenant,
-  deleteMockTenant,
 } from "../mock/mockApi";
 
-// ============================================================
-// GET ALL TENANTS
-// ============================================================
-
-export async function getTenants(): Promise<Tenant[]> {
+export const getTenants = async (): Promise<Tenant[]> => {
   return getMockTenants();
-}
+};
 
-// ============================================================
-// GET TENANT
-// ============================================================
-
-export async function getTenant(id: string): Promise<Tenant> {
+export const getTenant = async (id: number): Promise<Tenant> => {
   return getMockTenant(id);
-}
+};
 
-// ============================================================
-// GET TENANT STATS
-// ============================================================
-
-export async function getTenantStats(): Promise<TenantStats> {
+export const getTenantStats = async (): Promise<TenantStats> => {
   return getMockTenantStats();
-}
+};
 
-// ============================================================
-// CREATE TENANT
-// ============================================================
-
-export async function createTenant(data: CreateTenantRequest): Promise<Tenant> {
+export const createTenant = async (data: TenantFormData): Promise<Tenant> => {
   return createMockTenant(data);
-}
+};
 
-// ============================================================
-// UPDATE TENANT
-// ============================================================
-
-export async function updateTenant(
-  id: string,
-  data: UpdateTenantRequest,
-): Promise<Tenant> {
+export const updateTenant = async (
+  id: number,
+  data: TenantFormData,
+): Promise<Tenant> => {
   return updateMockTenant(id, data);
-}
+};
 
-// ============================================================
-// ACTIVATE
-// ============================================================
-
-export async function activateTenant(id: string): Promise<Tenant> {
-  return activateMockTenant(id);
-}
-
-// ============================================================
-// DEACTIVATE
-// ============================================================
-
-export async function deactivateTenant(id: string): Promise<Tenant> {
-  return deactivateMockTenant(id);
-}
-
-// ============================================================
-// DELETE
-// ============================================================
-
-export async function deleteTenant(id: string): Promise<void> {
+export const deleteTenant = async (id: number): Promise<void> => {
   return deleteMockTenant(id);
-}
+};
+
+export const activateTenant = async (id: number): Promise<Tenant> => {
+  return activateMockTenant(id);
+};
+
+export const deactivateTenant = async (id: number): Promise<Tenant> => {
+  return deactivateMockTenant(id);
+};

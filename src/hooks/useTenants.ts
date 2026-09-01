@@ -6,54 +6,42 @@ import {
   getTenantStats,
   createTenant,
   updateTenant,
+  deleteTenant,
   activateTenant,
   deactivateTenant,
-  deleteTenant,
 } from "../api/tenantApi";
 
-// ============================================================
-// GET ALL TENANTS
-// ============================================================
+import type { TenantFormData } from "../types/tenant";
 
-export function useTenants() {
+export const useTenants = () => {
   return useQuery({
     queryKey: ["tenants"],
     queryFn: getTenants,
   });
-}
+};
 
-// ============================================================
-// GET TENANT
-// ============================================================
+export const useTenant = (id: string | number | undefined) => {
+  const tenantId = typeof id === "string" ? Number(id) : id;
 
-export function useTenant(id?: string) {
   return useQuery({
-    queryKey: ["tenant", id],
-    queryFn: () => getTenant(id!),
-    enabled: Boolean(id),
+    queryKey: ["tenant", tenantId],
+    queryFn: () => getTenant(tenantId as number),
+    enabled: tenantId !== undefined && Number.isFinite(tenantId),
   });
-}
+};
 
-// ============================================================
-// TENANT STATS
-// ============================================================
-
-export function useTenantStats() {
+export const useTenantStats = () => {
   return useQuery({
     queryKey: ["tenant-stats"],
     queryFn: getTenantStats,
   });
-}
+};
 
-// ============================================================
-// CREATE
-// ============================================================
-
-export function useCreateTenant() {
+export const useCreateTenant = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: createTenant,
+    mutationFn: (data: TenantFormData) => createTenant(data),
 
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -65,13 +53,9 @@ export function useCreateTenant() {
       });
     },
   });
-}
+};
 
-// ============================================================
-// UPDATE
-// ============================================================
-
-export function useUpdateTenant() {
+export const useUpdateTenant = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -79,17 +63,24 @@ export function useUpdateTenant() {
       id,
       data,
     }: {
-      id: string;
-      data: Parameters<typeof updateTenant>[1];
-    }) => updateTenant(id, data),
+      id: string | number;
+      data: TenantFormData;
+    }) => {
+      const tenantId = typeof id === "string" ? Number(id) : id;
+
+      return updateTenant(tenantId, data);
+    },
 
     onSuccess: (_, variables) => {
+      const tenantId =
+        typeof variables.id === "string" ? Number(variables.id) : variables.id;
+
       queryClient.invalidateQueries({
         queryKey: ["tenants"],
       });
 
       queryClient.invalidateQueries({
-        queryKey: ["tenant", variables.id],
+        queryKey: ["tenant", tenantId],
       });
 
       queryClient.invalidateQueries({
@@ -97,69 +88,17 @@ export function useUpdateTenant() {
       });
     },
   });
-}
+};
 
-// ============================================================
-// ACTIVATE
-// ============================================================
-
-export function useActivateTenant() {
+export const useDeleteTenant = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: activateTenant,
+    mutationFn: (id: string | number) => {
+      const tenantId = typeof id === "string" ? Number(id) : id;
 
-    onSuccess: (_, id) => {
-      queryClient.invalidateQueries({
-        queryKey: ["tenants"],
-      });
-
-      queryClient.invalidateQueries({
-        queryKey: ["tenant", id],
-      });
-
-      queryClient.invalidateQueries({
-        queryKey: ["tenant-stats"],
-      });
+      return deleteTenant(tenantId);
     },
-  });
-}
-
-// ============================================================
-// DEACTIVATE
-// ============================================================
-
-export function useDeactivateTenant() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: deactivateTenant,
-
-    onSuccess: (_, id) => {
-      queryClient.invalidateQueries({
-        queryKey: ["tenants"],
-      });
-
-      queryClient.invalidateQueries({
-        queryKey: ["tenant", id],
-      });
-
-      queryClient.invalidateQueries({
-        queryKey: ["tenant-stats"],
-      });
-    },
-  });
-}
-
-// ============================================================
-// DELETE
-// ============================================================
-
-export function useDeleteTenant() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: deleteTenant,
 
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -171,4 +110,60 @@ export function useDeleteTenant() {
       });
     },
   });
-}
+};
+
+export const useActivateTenant = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string | number) => {
+      const tenantId = typeof id === "string" ? Number(id) : id;
+
+      return activateTenant(tenantId);
+    },
+
+    onSuccess: (_, id) => {
+      const tenantId = typeof id === "string" ? Number(id) : id;
+
+      queryClient.invalidateQueries({
+        queryKey: ["tenants"],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["tenant", tenantId],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["tenant-stats"],
+      });
+    },
+  });
+};
+
+export const useDeactivateTenant = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string | number) => {
+      const tenantId = typeof id === "string" ? Number(id) : id;
+
+      return deactivateTenant(tenantId);
+    },
+
+    onSuccess: (_, id) => {
+      const tenantId = typeof id === "string" ? Number(id) : id;
+
+      queryClient.invalidateQueries({
+        queryKey: ["tenants"],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["tenant", tenantId],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["tenant-stats"],
+      });
+    },
+  });
+};

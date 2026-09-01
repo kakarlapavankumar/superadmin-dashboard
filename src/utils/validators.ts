@@ -1,51 +1,25 @@
 import type { CreateTenantInput } from "../types/tenant";
 
-export interface ValidationErrors {
-  tenantName?: string;
-  tenantCode?: string;
-  adminName?: string;
-  adminEmail?: string;
-  phone?: string;
-  subscription?: string;
-}
-
-export function validateTenant(
+export const validateTenant = (
   data: CreateTenantInput,
-  existingCodes: string[],
-): ValidationErrors {
-  const errors: ValidationErrors = {};
+): Record<string, string> => {
+  const errors: Record<string, string> = {};
 
-  if (!data.tenantName.trim()) {
-    errors.tenantName = "Tenant name is required";
+  if (!data.name.trim()) {
+    errors.name = "Tenant name is required";
   }
 
-  if (!data.tenantCode.trim()) {
-    errors.tenantCode = "Tenant code is required";
-  } else if (
-    existingCodes.some(
-      (code) => code.toLowerCase() === data.tenantCode.trim().toLowerCase(),
-    )
-  ) {
-    errors.tenantCode = "Tenant code already exists";
+  if (!data.code.trim()) {
+    errors.code = "Tenant code is required";
   }
 
-  if (!data.adminName.trim()) {
-    errors.adminName = "Admin name is required";
+  if (!data.domain.trim()) {
+    errors.domain = "Domain is required";
   }
 
-  if (!data.adminEmail.trim()) {
-    errors.adminEmail = "Admin email is required";
-  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.adminEmail)) {
-    errors.adminEmail = "Enter a valid email address";
-  }
-
-  if (!data.phone.trim()) {
-    errors.phone = "Phone number is required";
-  }
-
-  if (!data.subscription) {
-    errors.subscription = "Subscription is required";
+  if (!data.plan.trim()) {
+    errors.plan = "Plan is required";
   }
 
   return errors;
-}
+};

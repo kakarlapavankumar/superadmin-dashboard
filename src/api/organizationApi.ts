@@ -1,4 +1,8 @@
-import type { Organization, OrganizationFormData } from "../types/organization";
+import type {
+  Organization,
+  CreateOrganizationInput,
+  UpdateOrganizationInput,
+} from "../types/organization";
 
 import {
   getMockOrganizations,
@@ -7,59 +11,37 @@ import {
   updateMockOrganization,
   deleteMockOrganization,
   toggleMockOrganizationStatus,
-} from "../mock/mockApi";
+} from "../mock/organizations";
 
-// ============================================================
-// GET ALL ORGANIZATIONS
-// ============================================================
+export const getOrganizations = async (): Promise<Organization[]> => {
+  return Promise.resolve(getMockOrganizations());
+};
 
-export async function getOrganizations(): Promise<Organization[]> {
-  return getMockOrganizations();
-}
-
-// ============================================================
-// GET SINGLE ORGANIZATION
-// ============================================================
-
-export async function getOrganization(id: string): Promise<Organization> {
-  return getMockOrganization(id);
-}
-
-// ============================================================
-// CREATE ORGANIZATION
-// ============================================================
-
-export async function createOrganization(
-  data: OrganizationFormData,
-): Promise<Organization> {
-  return createMockOrganization(data);
-}
-
-// ============================================================
-// UPDATE ORGANIZATION
-// ============================================================
-
-export async function updateOrganization(
+export const getOrganization = async (
   id: string,
-  data: OrganizationFormData,
-): Promise<Organization> {
-  return updateMockOrganization(id, data);
-}
+): Promise<Organization | undefined> => {
+  return Promise.resolve(getMockOrganization(id));
+};
 
-// ============================================================
-// DELETE ORGANIZATION
-// ============================================================
+export const createOrganization = async (
+  data: CreateOrganizationInput,
+): Promise<Organization> => {
+  return Promise.resolve(createMockOrganization(data));
+};
 
-export async function deleteOrganization(id: string): Promise<void> {
-  return deleteMockOrganization(id);
-}
-
-// ============================================================
-// TOGGLE STATUS
-// ============================================================
-
-export async function toggleOrganizationStatus(
+export const updateOrganization = async (
   id: string,
-): Promise<Organization> {
-  return toggleMockOrganizationStatus(id);
-}
+  data: UpdateOrganizationInput,
+): Promise<Organization | undefined> => {
+  return Promise.resolve(updateMockOrganization(id, data));
+};
+
+export const deleteOrganization = async (id: string): Promise<boolean> => {
+  return Promise.resolve(deleteMockOrganization(id));
+};
+
+export const toggleOrganizationStatus = async (
+  id: string,
+): Promise<Organization | undefined> => {
+  return Promise.resolve(toggleMockOrganizationStatus(id));
+};

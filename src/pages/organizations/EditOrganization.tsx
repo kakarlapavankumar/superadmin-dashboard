@@ -1,271 +1,297 @@
-import { useMemo, useState } from "react";
-import { Save } from "lucide-react";
+import { FormEvent, useEffect, useState } from "react";
+import { ArrowLeft, Save } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 
-import BackToDashboard from "../../components/BackToDashboard";
-import PageHeader from "../../components/PageHeader";
-
 import {
-  useOrganization,
-  useUpdateOrganization,
-} from "../../hooks/useOrganizations";
+  getOrganization,
+  updateOrganization,
+} from "../../api/organizationApi";
 
-type OrganizationStatus = "Active" | "Inactive";
+import type {
+  OrganizationFormData,
+} from "../../types/organization";
 
-type OrganizationFormData = {
-  name: string;
-  code: string;
-  tenant: {
-    id?: string | number;
-    name?: string;
-  };
-  tenantId: string;
-  tenantName: string;
-  industry: string;
-  location: string;
-  email: string;
-  phone: string;
-  website: string;
-  employees: number;
-  description: string;
-  status: OrganizationStatus;
-};
-
-export default function EditOrganization() {
-  const { id } = useParams<{
-    id: string;
-  }>();
-
+function EditOrganization() {
   const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
 
-  const { data: organization, isLoading } = useOrganization(id);
+  const [form, setForm] =
+    useState<OrganizationFormData | null>(null);
 
-  const mutation = useUpdateOrganization();
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
 
-  const [draft, setDraft] = useState<Partial<OrganizationFormData>>({});
-
-  const tenant = organization?.tenant;
-
-  const form = useMemo<OrganizationFormData | null>(() => {
-    if (!organization) {
-      return null;
+  useEffect(() => {
+    if (!id) {
+      setError("Organization ID is missing");
+      setLoading(false);
+      return;
     }
 
-    const tenantDetails: { id?: string | number; name?: string } | null =
-      tenant && typeof tenant === "object"
-        ? (tenant as { id?: string | number; name?: string })
-        : null;
+    const loadOrganization = async () => {
+      try {
+        const organization =
+          await getOrganization(id);
 
-    const tenantId = String(tenantDetails?.id ?? "");
-    const tenantName = tenantDetails?.name ?? "";
-    const organizationWithOptionalFields =
-      organization as typeof organization & {
-        website?: string;
-        description?: string;
-      };
+        setForm({
+          name: organization.name,
+          code: organization.code,
+          tenantId: organization.tenantId,
+          description: organization.description,
+          industry: organization.industry,
+          location: organization.location,
+          email: organization.email,
+          phone: organization.phone,
+          employees: organization.employees,
+        });
+      } catch (err) {
+        console.error(err);
 
-    return {
-      name: draft.name ?? organization.name,
-      code: draft.code ?? organization.code,
-      tenant: draft.tenant ??
-        tenantDetails ?? { id: tenantId, name: tenantName },
-      tenantId: draft.tenantId ?? tenantId,
-      tenantName: draft.tenantName ?? tenantName,
-      industry: draft.industry ?? organization.industry,
-      location: draft.location ?? organization.location,
-      email: draft.email ?? organization.email,
-      phone: draft.phone ?? organization.phone,
-      website: draft.website ?? organizationWithOptionalFields.website ?? "",
-      employees: draft.employees ?? organization.employees,
-      description:
-        draft.description ?? organizationWithOptionalFields.description ?? "",
-      status: draft.status ?? organization.status,
+        setError(
+          err instanceof Error
+            ? err.message
+            : "Failed to load organization"
+        );
+      } finally {
+        setLoading(false);
+      }
     };
-  }, [draft, organization, tenant]);
 
-  const updateField = <K extends keyof OrganizationFormData>(
-    field: K,
-    value: OrganizationFormData[K],
+    loadOrganization();
+  }, [id]);
+
+  const updateField = (
+    field: keyof OrganizationFormData,
+    value: string | number
   ) => {
-    setDraft((current) => ({
-      ...current,
-      [field]: value,
-    }));
+    setForm((previous) =>
+      previous
+        ? {
+            ...previous,
+            [field]: value,
+          }
+        : previous
+    );
   };
 
-  if (isLoading || !form) {
+  const handleSubmit = async (
+    event: FormEvent
+  ) => {
+    event.preventDefault();
+
+    if (!id || !form) return;
+
+    try {
+      setSaving(true);
+      setError("");
+
+      await updateOrganization(id, form);
+
+      navigate(`/organizations/${id}`);
+    } catch (err) {
+      console.error(err);
+
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to update organization"
+      );
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
     return (
-      <div className="p-6 text-sm text-slate-500">Loading organization...</div>
+      <div className="p-6 text-sm text-slate-500">
+        Loading organization...
+      </div>
     );
   }
 
-  const handleSubmit = async (event: React.FormEvent) => {
-    event.preventDefault();
-
-    if (!id) return;
-
-    const payload = {
-      ...form,
-      tenant: String(
-        ((form.tenantId || form.tenant?.id) ?? form.tenantName) || "",
-      ),
-    };
-
-    try {
-      await mutation.mutateAsync({
-        id,
-        data: payload,
-      });
-
-      navigate(`/organizations/${id}`);
-    } catch (error) {
-      console.error(error);
-      alert("Failed to update organization.");
-    }
-  };
+  if (!form) {
+    return (
+      <div className="p-6">
+        <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-red-600">
+          {error || "Organization not found"}
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-full bg-slate-50 p-6">
-      <div className="mx-auto max-w-5xl">
-        <BackToDashboard />
+    <div className="p-6">
 
-        <div className="mt-5">
-          <PageHeader
-            title="Edit Organization"
-            description={`Update ${organization?.name}`}
-          />
+      <button
+        onClick={() =>
+          navigate(
+            id
+              ? `/organizations/${id}`
+              : "/organizations"
+          )
+        }
+        className="mb-5 inline-flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-blue-600"
+      >
+        <ArrowLeft size={17} />
+        Back
+      </button>
+
+      <div className="mx-auto max-w-4xl">
+
+        <div className="mb-6">
+
+          <h1 className="text-2xl font-bold text-slate-900">
+            Edit Organization
+          </h1>
+
+          <p className="mt-1 text-sm text-slate-500">
+            Update organization information.
+          </p>
+
         </div>
 
         <form
           onSubmit={handleSubmit}
-          className="rounded-xl border border-slate-200 bg-white shadow-sm"
+          className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
         >
-          <div className="grid gap-5 p-6 md:grid-cols-2">
+
+          {error && (
+            <div className="mb-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-600">
+              {error}
+            </div>
+          )}
+
+          <div className="grid gap-5 md:grid-cols-2">
+
             <Input
               label="Organization Name"
-              required
               value={form.name}
-              onChange={(value) => updateField("name", value)}
+              required
+              onChange={(value) =>
+                updateField("name", value)
+              }
             />
 
             <Input
               label="Organization Code"
-              required
               value={form.code}
-              onChange={(value) => updateField("code", value.toUpperCase())}
+              required
+              onChange={(value) =>
+                updateField(
+                  "code",
+                  value.toUpperCase()
+                )
+              }
             />
 
             <Input
               label="Tenant ID"
-              required
               value={form.tenantId}
-              onChange={(value) => updateField("tenantId", value)}
-            />
-
-            <Input
-              label="Tenant Name"
               required
-              value={form.tenantName}
-              onChange={(value) => updateField("tenantName", value)}
+              onChange={(value) =>
+                updateField("tenantId", value)
+              }
             />
 
             <Input
               label="Industry"
               value={form.industry}
-              onChange={(value) => updateField("industry", value)}
+              onChange={(value) =>
+                updateField("industry", value)
+              }
             />
 
             <Input
               label="Location"
               value={form.location}
-              onChange={(value) => updateField("location", value)}
+              onChange={(value) =>
+                updateField("location", value)
+              }
             />
 
             <Input
               label="Email"
               type="email"
-              required
               value={form.email}
-              onChange={(value) => updateField("email", value)}
+              onChange={(value) =>
+                updateField("email", value)
+              }
             />
 
             <Input
               label="Phone"
               value={form.phone}
-              onChange={(value) => updateField("phone", value)}
-            />
-
-            <Input
-              label="Website"
-              value={form.website}
-              onChange={(value) => updateField("website", value)}
+              onChange={(value) =>
+                updateField("phone", value)
+              }
             />
 
             <Input
               label="Employees"
               type="number"
               value={String(form.employees)}
-              onChange={(value) => updateField("employees", Number(value) || 0)}
+              onChange={(value) =>
+                updateField(
+                  "employees",
+                  Number(value)
+                )
+              }
             />
 
-            <div>
-              <label className="mb-1.5 block text-sm font-medium text-slate-700">
-                Status
-              </label>
-
-              <select
-                value={form.status}
-                onChange={(event) =>
-                  updateField(
-                    "status",
-                    event.target.value as OrganizationFormData["status"],
-                  )
-                }
-                className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-blue-500"
-              >
-                <option value="Active">Active</option>
-
-                <option value="Inactive">Inactive</option>
-              </select>
-            </div>
-
-            <div className="md:col-span-2">
-              <label className="mb-1.5 block text-sm font-medium text-slate-700">
-                Description
-              </label>
-
-              <textarea
-                rows={4}
-                value={form.description}
-                onChange={(event) =>
-                  updateField("description", event.target.value)
-                }
-                className="w-full resize-none rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-blue-500"
-              />
-            </div>
           </div>
 
-          <div className="flex justify-end gap-3 border-t border-slate-200 px-6 py-4">
+          <div className="mt-5">
+
+            <label className="mb-2 block text-sm font-medium text-slate-700">
+              Description
+            </label>
+
+            <textarea
+              value={form.description}
+              onChange={(event) =>
+                updateField(
+                  "description",
+                  event.target.value
+                )
+              }
+              rows={4}
+              className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+            />
+
+          </div>
+
+          <div className="mt-6 flex justify-end gap-3 border-t border-slate-100 pt-5">
+
             <button
               type="button"
-              onClick={() => navigate(`/organizations/${id}`)}
-              className="rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-medium text-slate-700"
+              onClick={() =>
+                navigate(
+                  id
+                    ? `/organizations/${id}`
+                    : "/organizations"
+                )
+              }
+              className="rounded-xl border border-slate-200 px-5 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
             >
               Cancel
             </button>
 
             <button
               type="submit"
-              disabled={mutation.isPending}
-              className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
+              disabled={saving}
+              className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
             >
               <Save size={17} />
-
-              {mutation.isPending ? "Saving..." : "Save Changes"}
+              {saving ? "Saving..." : "Save Changes"}
             </button>
+
           </div>
+
         </form>
+
       </div>
+
     </div>
   );
 }
@@ -285,19 +311,24 @@ function Input({
 }) {
   return (
     <div>
-      <label className="mb-1.5 block text-sm font-medium text-slate-700">
+      <label className="mb-2 block text-sm font-medium text-slate-700">
         {label}
-
-        {required && <span className="ml-1 text-red-500">*</span>}
+        {required && (
+          <span className="ml-1 text-red-500">*</span>
+        )}
       </label>
 
       <input
         type={type}
         required={required}
         value={value}
-        onChange={(event) => onChange(event.target.value)}
-        className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-blue-500"
+        onChange={(event) =>
+          onChange(event.target.value)
+        }
+        className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
       />
     </div>
   );
 }
+
+export default EditOrganization;
