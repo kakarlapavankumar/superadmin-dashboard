@@ -1,3 +1,10 @@
+import type {
+  Tenant,
+  TenantStats,
+  CreateTenantRequest,
+  UpdateTenantRequest,
+} from "../types/tenant";
+
 import {
   getMockTenants,
   getMockTenant,
@@ -6,37 +13,72 @@ import {
   updateMockTenant,
   activateMockTenant,
   deactivateMockTenant,
+  deleteMockTenant,
 } from "../mock/mockApi";
 
-export async function getTenants() {
+// ============================================================
+// GET ALL TENANTS
+// ============================================================
+
+export async function getTenants(): Promise<Tenant[]> {
   return getMockTenants();
 }
 
-export async function getTenant(id: number | string) {
-  return getMockTenant(String(id));
+// ============================================================
+// GET TENANT
+// ============================================================
+
+export async function getTenant(id: string): Promise<Tenant> {
+  return getMockTenant(id);
 }
 
-export async function getTenantStats(id: number | string) {
-  return getMockTenantStats(String(id));
+// ============================================================
+// GET TENANT STATS
+// ============================================================
+
+export async function getTenantStats(): Promise<TenantStats> {
+  return getMockTenantStats();
 }
 
-export async function createTenant(
-  tenant: Parameters<typeof createMockTenant>[0],
-) {
-  return createMockTenant(tenant);
+// ============================================================
+// CREATE TENANT
+// ============================================================
+
+export async function createTenant(data: CreateTenantRequest): Promise<Tenant> {
+  return createMockTenant(data);
 }
+
+// ============================================================
+// UPDATE TENANT
+// ============================================================
 
 export async function updateTenant(
-  id: number | string,
-  tenant: Parameters<typeof updateMockTenant>[1],
-) {
-  return updateMockTenant(String(id), tenant);
+  id: string,
+  data: UpdateTenantRequest,
+): Promise<Tenant> {
+  return updateMockTenant(id, data);
 }
 
-export async function activateTenant(id: number | string) {
-  return activateMockTenant(String(id));
+// ============================================================
+// ACTIVATE
+// ============================================================
+
+export async function activateTenant(id: string): Promise<Tenant> {
+  return activateMockTenant(id);
 }
 
-export async function deactivateTenant(id: number | string) {
-  return deactivateMockTenant(String(id));
+// ============================================================
+// DEACTIVATE
+// ============================================================
+
+export async function deactivateTenant(id: string): Promise<Tenant> {
+  return deactivateMockTenant(id);
+}
+
+// ============================================================
+// DELETE
+// ============================================================
+
+export async function deleteTenant(id: string): Promise<void> {
+  return deleteMockTenant(id);
 }

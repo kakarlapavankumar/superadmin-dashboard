@@ -3,11 +3,17 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   getTenants,
   getTenant,
+  getTenantStats,
   createTenant,
   updateTenant,
   activateTenant,
   deactivateTenant,
+  deleteTenant,
 } from "../api/tenantApi";
+
+// ============================================================
+// GET ALL TENANTS
+// ============================================================
 
 export function useTenants() {
   return useQuery({
@@ -16,28 +22,54 @@ export function useTenants() {
   });
 }
 
-export function useTenant(id: number) {
+// ============================================================
+// GET TENANT
+// ============================================================
+
+export function useTenant(id?: string) {
   return useQuery({
     queryKey: ["tenant", id],
-    queryFn: () => getTenant(id),
+    queryFn: () => getTenant(id!),
     enabled: Boolean(id),
   });
 }
+
+// ============================================================
+// TENANT STATS
+// ============================================================
+
+export function useTenantStats() {
+  return useQuery({
+    queryKey: ["tenant-stats"],
+    queryFn: getTenantStats,
+  });
+}
+
+// ============================================================
+// CREATE
+// ============================================================
 
 export function useCreateTenant() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: Parameters<typeof createTenant>[0]) =>
-      createTenant(data),
+    mutationFn: createTenant,
 
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["tenants"],
       });
+
+      queryClient.invalidateQueries({
+        queryKey: ["tenant-stats"],
+      });
     },
   });
 }
+
+// ============================================================
+// UPDATE
+// ============================================================
 
 export function useUpdateTenant() {
   const queryClient = useQueryClient();
@@ -47,7 +79,7 @@ export function useUpdateTenant() {
       id,
       data,
     }: {
-      id: number;
+      id: string;
       data: Parameters<typeof updateTenant>[1];
     }) => updateTenant(id, data),
 
@@ -59,9 +91,17 @@ export function useUpdateTenant() {
       queryClient.invalidateQueries({
         queryKey: ["tenant", variables.id],
       });
+
+      queryClient.invalidateQueries({
+        queryKey: ["tenant-stats"],
+      });
     },
   });
 }
+
+// ============================================================
+// ACTIVATE
+// ============================================================
 
 export function useActivateTenant() {
   const queryClient = useQueryClient();
@@ -77,9 +117,17 @@ export function useActivateTenant() {
       queryClient.invalidateQueries({
         queryKey: ["tenant", id],
       });
+
+      queryClient.invalidateQueries({
+        queryKey: ["tenant-stats"],
+      });
     },
   });
 }
+
+// ============================================================
+// DEACTIVATE
+// ============================================================
 
 export function useDeactivateTenant() {
   const queryClient = useQueryClient();
@@ -94,6 +142,32 @@ export function useDeactivateTenant() {
 
       queryClient.invalidateQueries({
         queryKey: ["tenant", id],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["tenant-stats"],
+      });
+    },
+  });
+}
+
+// ============================================================
+// DELETE
+// ============================================================
+
+export function useDeleteTenant() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: deleteTenant,
+
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["tenants"],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["tenant-stats"],
       });
     },
   });

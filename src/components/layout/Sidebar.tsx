@@ -35,11 +35,9 @@ const navigation = [
         label: "Dashboard",
         path: "/",
         icon: BarChart3,
-        active: true,
       },
     ],
   },
-
   {
     title: "Management",
     items: [
@@ -47,7 +45,6 @@ const navigation = [
         label: "Tenant Management",
         path: "/tenants",
         icon: Building2,
-        active: true,
       },
       {
         label: "Organization Management",
@@ -76,7 +73,6 @@ const navigation = [
       },
     ],
   },
-
   {
     title: "Platform",
     items: [
@@ -117,7 +113,6 @@ const navigation = [
       },
     ],
   },
-
   {
     title: "More",
     items: [
@@ -182,6 +177,7 @@ function Sidebar({ open, onClose }: SidebarProps) {
             <button
               onClick={onClose}
               className="rounded-lg p-2 text-slate-400 hover:bg-slate-800 lg:hidden"
+              aria-label="Close navigation"
             >
               <X size={20} />
             </button>
@@ -203,12 +199,13 @@ function Sidebar({ open, onClose }: SidebarProps) {
                         key={item.path}
                         to={item.path}
                         onClick={onClose}
+                        end={item.path === "/"}
                         className={({ isActive }) =>
                           `
                           flex items-center gap-3 rounded-lg px-3 py-2.5
                           text-sm font-medium transition
                           ${
-                            isActive && item.active !== false
+                            isActive
                               ? "bg-blue-600 text-white shadow-lg shadow-blue-950/30"
                               : "text-slate-400 hover:bg-slate-900 hover:text-white"
                           }
@@ -217,12 +214,6 @@ function Sidebar({ open, onClose }: SidebarProps) {
                       >
                         <Icon size={18} />
                         <span>{item.label}</span>
-
-                        {!item.active && (
-                          <span className="ml-auto rounded bg-slate-800 px-1.5 py-0.5 text-[9px] text-slate-500">
-                            Soon
-                          </span>
-                        )}
                       </NavLink>
                     );
                   })}
