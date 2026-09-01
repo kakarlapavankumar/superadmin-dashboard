@@ -1,169 +1,109 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
-  getTenants,
+  activateTenant,
+  createTenant,
+  deactivateTenant,
   getTenant,
   getTenantStats,
-  createTenant,
+  getTenants,
   updateTenant,
-  deleteTenant,
-  activateTenant,
-  deactivateTenant,
 } from "../api/tenantApi";
 
-import type { TenantFormData } from "../types/tenant";
+import type { CreateTenantInput, UpdateTenantInput } from "../types/tenant";
 
-export const useTenants = () => {
+export function useTenants() {
   return useQuery({
     queryKey: ["tenants"],
     queryFn: getTenants,
   });
-};
+}
 
-export const useTenant = (id: string | number | undefined) => {
-  const tenantId = typeof id === "string" ? Number(id) : id;
-
+export function useTenant(id: number) {
   return useQuery({
-    queryKey: ["tenant", tenantId],
-    queryFn: () => getTenant(tenantId as number),
-    enabled: tenantId !== undefined && Number.isFinite(tenantId),
+    queryKey: ["tenant", id],
+    queryFn: () => getTenant(id),
+    enabled: Number.isFinite(id),
   });
-};
+}
 
-export const useTenantStats = () => {
+export function useTenantStats(id: number) {
   return useQuery({
-    queryKey: ["tenant-stats"],
-    queryFn: getTenantStats,
+    queryKey: ["tenant-stats", id],
+    queryFn: () => getTenantStats(),
+    enabled: Number.isFinite(id),
   });
-};
+}
 
-export const useCreateTenant = () => {
+export function useCreateTenant() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: TenantFormData) => createTenant(data),
+    mutationFn: (data: CreateTenantInput) => createTenant(data),
 
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["tenants"],
       });
-
-      queryClient.invalidateQueries({
-        queryKey: ["tenant-stats"],
-      });
     },
   });
-};
+}
 
-export const useUpdateTenant = () => {
+export function useUpdateTenant() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({
-      id,
-      data,
-    }: {
-      id: string | number;
-      data: TenantFormData;
-    }) => {
-      const tenantId = typeof id === "string" ? Number(id) : id;
-
-      return updateTenant(tenantId, data);
-    },
+    mutationFn: ({ id, data }: { id: number; data: UpdateTenantInput }) =>
+      updateTenant(id, data),
 
     onSuccess: (_, variables) => {
-      const tenantId =
-        typeof variables.id === "string" ? Number(variables.id) : variables.id;
-
       queryClient.invalidateQueries({
         queryKey: ["tenants"],
       });
 
       queryClient.invalidateQueries({
-        queryKey: ["tenant", tenantId],
+        queryKey: ["tenant", variables.id],
       });
 
       queryClient.invalidateQueries({
-        queryKey: ["tenant-stats"],
+        queryKey: ["tenant-stats", variables.id],
       });
     },
   });
-};
+}
 
-export const useDeleteTenant = () => {
+export function useActivateTenant() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: string | number) => {
-      const tenantId = typeof id === "string" ? Number(id) : id;
-
-      return deleteTenant(tenantId);
-    },
-
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["tenants"],
-      });
-
-      queryClient.invalidateQueries({
-        queryKey: ["tenant-stats"],
-      });
-    },
-  });
-};
-
-export const useActivateTenant = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (id: string | number) => {
-      const tenantId = typeof id === "string" ? Number(id) : id;
-
-      return activateTenant(tenantId);
-    },
+    mutationFn: (id: number) => activateTenant(id),
 
     onSuccess: (_, id) => {
-      const tenantId = typeof id === "string" ? Number(id) : id;
-
       queryClient.invalidateQueries({
         queryKey: ["tenants"],
       });
 
       queryClient.invalidateQueries({
-        queryKey: ["tenant", tenantId],
-      });
-
-      queryClient.invalidateQueries({
-        queryKey: ["tenant-stats"],
+        queryKey: ["tenant", id],
       });
     },
   });
-};
+}
 
-export const useDeactivateTenant = () => {
+export function useDeactivateTenant() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: string | number) => {
-      const tenantId = typeof id === "string" ? Number(id) : id;
-
-      return deactivateTenant(tenantId);
-    },
+    mutationFn: (id: number) => deactivateTenant(id),
 
     onSuccess: (_, id) => {
-      const tenantId = typeof id === "string" ? Number(id) : id;
-
       queryClient.invalidateQueries({
         queryKey: ["tenants"],
       });
 
       queryClient.invalidateQueries({
-        queryKey: ["tenant", tenantId],
-      });
-
-      queryClient.invalidateQueries({
-        queryKey: ["tenant-stats"],
+        queryKey: ["tenant", id],
       });
     },
   });
-};
+}

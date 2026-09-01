@@ -1,28 +1,45 @@
+export type TenantStatus = "Active" | "Inactive";
+
+export type TenantPlan = "Basic" | "Professional" | "Enterprise";
+
 export interface Tenant {
   id: number;
   name: string;
   code: string;
   domain: string;
-  status: "Active" | "Inactive";
-  plan: string;
+  status: TenantStatus;
+  plan: TenantPlan;
   users: number;
   organizations: number;
   createdAt: string;
-  updatedAt?: string;
+  updatedAt: string;
 }
 
-export interface TenantFormData {
+export interface CreateTenantInput {
   name: string;
   code: string;
   domain: string;
-  status: "Active" | "Inactive";
-  plan: string;
+  plan: TenantPlan;
+  status: TenantStatus;
 }
 
-export type CreateTenantInput = TenantFormData;
+export interface UpdateTenantInput {
+  name: string;
+  code: string;
+  domain: string;
+  plan: TenantPlan;
+  status: TenantStatus;
+}
+
+export interface TenantFilters {
+  search?: string;
+  status?: TenantStatus | "All";
+  plan?: TenantPlan | "All";
+}
 
 export interface TenantStats {
-  total: number;
-  active: number;
-  inactive: number;
+  users: number;
+  organizations: number;
+  activeUsers: number;
+  storage: number;
 }
