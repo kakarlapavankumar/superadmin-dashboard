@@ -2,6 +2,7 @@ export type OrganizationStatus = "Active" | "Inactive";
 
 export interface Organization {
   id: string;
+
   name: string;
   code: string;
   description: string;
@@ -11,10 +12,12 @@ export interface Organization {
 
   industry: string;
   location: string;
+
   email: string;
   phone: string;
 
   employees: number;
+
   status: OrganizationStatus;
 
   createdAt: string;
@@ -31,10 +34,12 @@ export interface OrganizationFormData {
 
   industry: string;
   location: string;
+
   email: string;
   phone: string;
 
   employees: number;
+
   status: OrganizationStatus;
 }
 
@@ -48,10 +53,12 @@ export interface CreateOrganizationInput {
 
   industry: string;
   location: string;
+
   email: string;
   phone: string;
 
   employees?: number;
+
   status: OrganizationStatus;
 }
 
@@ -65,9 +72,11 @@ export interface UpdateOrganizationInput {
 
   industry: string;
   location: string;
+
   email: string;
   phone: string;
 
   employees?: number;
+
   status: OrganizationStatus;
 }
