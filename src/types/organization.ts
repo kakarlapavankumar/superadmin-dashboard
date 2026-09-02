@@ -1,38 +1,60 @@
+export type OrganizationStatus = "Active" | "Inactive";
+
 export interface Organization {
   id: string;
   name: string;
+  code: string;
+  description: string;
   tenantId: string;
-  tenant: string;
+  tenantName: string;
   industry: string;
   location: string;
   email: string;
   phone: string;
   employees: number;
-  status: "Active" | "Inactive";
+  status: OrganizationStatus;
   createdAt: string;
-  updatedAt?: string;
+  updatedAt: string;
+}
+
+export interface OrganizationFormData {
+  name: string;
+  code: string;
+  description: string;
+  tenantId: string;
+  tenantName: string;
+  industry: string;
+  location: string;
+  email: string;
+  phone: string;
+  employees: number;
+  status: OrganizationStatus;
 }
 
 export interface CreateOrganizationInput {
   name: string;
+  code: string;
+  description: string;
   tenantId: string;
-  tenant: string;
+  tenantName: string;
   industry: string;
   location: string;
   email: string;
   phone: string;
-  employees: number;
-  status?: "Active" | "Inactive";
+  employees?: number;
+  status: OrganizationStatus;
 }
 
 export interface UpdateOrganizationInput {
-  name?: string;
-  tenantId?: string;
-  tenant?: string;
-  industry?: string;
-  location?: string;
-  email?: string;
-  phone?: string;
+  name: string;
+  code: string;
+  description: string;
+  tenantId: string;
+  tenantName: string;
+  industry: string;
+  location: string;
+  email: string;
+  phone: string;
   employees?: number;
-  status?: "Active" | "Inactive";
+  status: OrganizationStatus;
 }

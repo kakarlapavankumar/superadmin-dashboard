@@ -1,102 +1,106 @@
-import { FormEvent, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { ArrowLeft, Save } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 
-import {
-  getOrganization,
-  updateOrganization,
-} from "../../api/organizationApi";
+import { getOrganization, updateOrganization } from "../../api/organizationApi";
 
 import type {
   OrganizationFormData,
+  OrganizationStatus,
 } from "../../types/organization";
+
+const initialForm: OrganizationFormData = {
+  name: "",
+  code: "",
+  description: "",
+  tenantId: "",
+  tenantName: "",
+  industry: "",
+  location: "",
+  email: "",
+  phone: "",
+  employees: 0,
+  status: "Active",
+};
 
 function EditOrganization() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
 
-  const [form, setForm] =
-    useState<OrganizationFormData | null>(null);
-
+  const [form, setForm] = useState<OrganizationFormData>(initialForm);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (!id) {
-      setError("Organization ID is missing");
-      setLoading(false);
-      return;
-    }
+    async function loadOrganization() {
+      if (!id) {
+        setError("Organization ID is missing.");
+        setLoading(false);
+        return;
+      }
 
-    const loadOrganization = async () => {
       try {
-        const organization =
-          await getOrganization(id);
+        const organization = await getOrganization(id);
+
+        if (!organization) {
+          setError("Organization not found.");
+          return;
+        }
 
         setForm({
           name: organization.name,
           code: organization.code,
-          tenantId: organization.tenantId,
           description: organization.description,
+          tenantId: organization.tenantId,
+          tenantName: organization.tenantName,
           industry: organization.industry,
           location: organization.location,
           email: organization.email,
           phone: organization.phone,
           employees: organization.employees,
+          status: organization.status,
         });
-      } catch (err) {
-        console.error(err);
-
-        setError(
-          err instanceof Error
-            ? err.message
-            : "Failed to load organization"
-        );
+      } catch {
+        setError("Failed to load organization.");
       } finally {
         setLoading(false);
       }
-    };
+    }
 
     loadOrganization();
   }, [id]);
 
-  const updateField = (
+  const handleChange = (
     field: keyof OrganizationFormData,
-    value: string | number
+    value: string | number,
   ) => {
-    setForm((previous) =>
-      previous
-        ? {
-            ...previous,
-            [field]: value,
-          }
-        : previous
-    );
+    setForm((previous: OrganizationFormData) => ({
+      ...previous,
+      [field]: value,
+    }));
   };
 
-  const handleSubmit = async (
-    event: FormEvent
-  ) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    if (!id || !form) return;
+    if (!id) {
+      setError("Organization ID is missing.");
+      return;
+    }
+
+    setSaving(true);
+    setError("");
 
     try {
-      setSaving(true);
-      setError("");
+      await updateOrganization(id, {
+        ...form,
+        status: form.status as OrganizationStatus,
+      });
 
-      await updateOrganization(id, form);
-
-      navigate(`/organizations/${id}`);
-    } catch (err) {
-      console.error(err);
-
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Failed to update organization"
-      );
+      navigate("/organizations");
+    } catch {
+      setError("Failed to update organization.");
     } finally {
       setSaving(false);
     }
@@ -104,229 +108,216 @@ function EditOrganization() {
 
   if (loading) {
     return (
-      <div className="p-6 text-sm text-slate-500">
-        Loading organization...
+      <div className="flex min-h-[400px] items-center justify-center">
+        <div className="text-sm text-slate-500">Loading organization...</div>
       </div>
     );
   }
 
-  if (!form) {
+  if (error && !form.name) {
     return (
       <div className="p-6">
-        <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-red-600">
-          {error || "Organization not found"}
+        <div className="rounded-xl border border-red-200 bg-red-50 p-5 text-red-700">
+          {error}
         </div>
+        <button
+          onClick={() => navigate("/organizations")}
+          className="mt-4 inline-flex items-center gap-2 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white"
+        >
+          <ArrowLeft size={16} />
+          Back to Organizations
+        </button>
       </div>
     );
   }
 
   return (
     <div className="p-6">
+      <div className="mb-6 flex items-center gap-4">
+        <button
+          onClick={() => navigate("/organizations")}
+          className="rounded-lg border border-slate-200 p-2 hover:bg-slate-50"
+        >
+          <ArrowLeft size={18} />
+        </button>
 
-      <button
-        onClick={() =>
-          navigate(
-            id
-              ? `/organizations/${id}`
-              : "/organizations"
-          )
-        }
-        className="mb-5 inline-flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-blue-600"
-      >
-        <ArrowLeft size={17} />
-        Back
-      </button>
-
-      <div className="mx-auto max-w-4xl">
-
-        <div className="mb-6">
-
+        <div>
           <h1 className="text-2xl font-bold text-slate-900">
             Edit Organization
           </h1>
-
           <p className="mt-1 text-sm text-slate-500">
             Update organization information.
           </p>
-
         </div>
+      </div>
 
-        <form
-          onSubmit={handleSubmit}
-          className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
-        >
+      {error && (
+        <div className="mb-5 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+          {error}
+        </div>
+      )}
 
-          {error && (
-            <div className="mb-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-600">
-              {error}
-            </div>
-          )}
-
-          <div className="grid gap-5 md:grid-cols-2">
-
-            <Input
-              label="Organization Name"
+      <form
+        onSubmit={handleSubmit}
+        className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+      >
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+          <div>
+            <label className="mb-2 block text-sm font-medium text-slate-700">
+              Organization Name
+            </label>
+            <input
               value={form.name}
+              onChange={(e) => handleChange("name", e.target.value)}
               required
-              onChange={(value) =>
-                updateField("name", value)
-              }
+              className="w-full rounded-lg border border-slate-300 px-3 py-2.5 outline-none focus:border-blue-500"
             />
-
-            <Input
-              label="Organization Code"
-              value={form.code}
-              required
-              onChange={(value) =>
-                updateField(
-                  "code",
-                  value.toUpperCase()
-                )
-              }
-            />
-
-            <Input
-              label="Tenant ID"
-              value={form.tenantId}
-              required
-              onChange={(value) =>
-                updateField("tenantId", value)
-              }
-            />
-
-            <Input
-              label="Industry"
-              value={form.industry}
-              onChange={(value) =>
-                updateField("industry", value)
-              }
-            />
-
-            <Input
-              label="Location"
-              value={form.location}
-              onChange={(value) =>
-                updateField("location", value)
-              }
-            />
-
-            <Input
-              label="Email"
-              type="email"
-              value={form.email}
-              onChange={(value) =>
-                updateField("email", value)
-              }
-            />
-
-            <Input
-              label="Phone"
-              value={form.phone}
-              onChange={(value) =>
-                updateField("phone", value)
-              }
-            />
-
-            <Input
-              label="Employees"
-              type="number"
-              value={String(form.employees)}
-              onChange={(value) =>
-                updateField(
-                  "employees",
-                  Number(value)
-                )
-              }
-            />
-
           </div>
 
-          <div className="mt-5">
+          <div>
+            <label className="mb-2 block text-sm font-medium text-slate-700">
+              Organization Code
+            </label>
+            <input
+              value={form.code}
+              onChange={(e) => handleChange("code", e.target.value)}
+              required
+              className="w-full rounded-lg border border-slate-300 px-3 py-2.5 outline-none focus:border-blue-500"
+            />
+          </div>
 
+          <div>
+            <label className="mb-2 block text-sm font-medium text-slate-700">
+              Tenant Name
+            </label>
+            <input
+              value={form.tenantName}
+              onChange={(e) => handleChange("tenantName", e.target.value)}
+              required
+              className="w-full rounded-lg border border-slate-300 px-3 py-2.5 outline-none focus:border-blue-500"
+            />
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm font-medium text-slate-700">
+              Tenant ID
+            </label>
+            <input
+              value={form.tenantId}
+              onChange={(e) => handleChange("tenantId", e.target.value)}
+              required
+              className="w-full rounded-lg border border-slate-300 px-3 py-2.5 outline-none focus:border-blue-500"
+            />
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm font-medium text-slate-700">
+              Industry
+            </label>
+            <input
+              value={form.industry}
+              onChange={(e) => handleChange("industry", e.target.value)}
+              className="w-full rounded-lg border border-slate-300 px-3 py-2.5 outline-none focus:border-blue-500"
+            />
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm font-medium text-slate-700">
+              Location
+            </label>
+            <input
+              value={form.location}
+              onChange={(e) => handleChange("location", e.target.value)}
+              className="w-full rounded-lg border border-slate-300 px-3 py-2.5 outline-none focus:border-blue-500"
+            />
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm font-medium text-slate-700">
+              Email
+            </label>
+            <input
+              type="email"
+              value={form.email}
+              onChange={(e) => handleChange("email", e.target.value)}
+              className="w-full rounded-lg border border-slate-300 px-3 py-2.5 outline-none focus:border-blue-500"
+            />
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm font-medium text-slate-700">
+              Phone
+            </label>
+            <input
+              value={form.phone}
+              onChange={(e) => handleChange("phone", e.target.value)}
+              className="w-full rounded-lg border border-slate-300 px-3 py-2.5 outline-none focus:border-blue-500"
+            />
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm font-medium text-slate-700">
+              Employees
+            </label>
+            <input
+              type="number"
+              min="0"
+              value={form.employees}
+              onChange={(e) =>
+                handleChange("employees", Number(e.target.value))
+              }
+              className="w-full rounded-lg border border-slate-300 px-3 py-2.5 outline-none focus:border-blue-500"
+            />
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm font-medium text-slate-700">
+              Status
+            </label>
+            <select
+              value={form.status}
+              onChange={(e) =>
+                handleChange("status", e.target.value as OrganizationStatus)
+              }
+              className="w-full rounded-lg border border-slate-300 px-3 py-2.5 outline-none focus:border-blue-500"
+            >
+              <option value="Active">Active</option>
+              <option value="Inactive">Inactive</option>
+            </select>
+          </div>
+
+          <div className="md:col-span-2">
             <label className="mb-2 block text-sm font-medium text-slate-700">
               Description
             </label>
-
             <textarea
-              value={form.description}
-              onChange={(event) =>
-                updateField(
-                  "description",
-                  event.target.value
-                )
-              }
               rows={4}
-              className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              value={form.description}
+              onChange={(e) => handleChange("description", e.target.value)}
+              className="w-full rounded-lg border border-slate-300 px-3 py-2.5 outline-none focus:border-blue-500"
             />
-
           </div>
+        </div>
 
-          <div className="mt-6 flex justify-end gap-3 border-t border-slate-100 pt-5">
+        <div className="mt-6 flex justify-end gap-3 border-t border-slate-200 pt-5">
+          <button
+            type="button"
+            onClick={() => navigate("/organizations")}
+            className="rounded-lg border border-slate-300 px-5 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+          >
+            Cancel
+          </button>
 
-            <button
-              type="button"
-              onClick={() =>
-                navigate(
-                  id
-                    ? `/organizations/${id}`
-                    : "/organizations"
-                )
-              }
-              className="rounded-xl border border-slate-200 px-5 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
-            >
-              Cancel
-            </button>
-
-            <button
-              type="submit"
-              disabled={saving}
-              className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
-            >
-              <Save size={17} />
-              {saving ? "Saving..." : "Save Changes"}
-            </button>
-
-          </div>
-
-        </form>
-
-      </div>
-
-    </div>
-  );
-}
-
-function Input({
-  label,
-  value,
-  onChange,
-  type = "text",
-  required = false,
-}: {
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-  type?: string;
-  required?: boolean;
-}) {
-  return (
-    <div>
-      <label className="mb-2 block text-sm font-medium text-slate-700">
-        {label}
-        {required && (
-          <span className="ml-1 text-red-500">*</span>
-        )}
-      </label>
-
-      <input
-        type={type}
-        required={required}
-        value={value}
-        onChange={(event) =>
-          onChange(event.target.value)
-        }
-        className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-      />
+          <button
+            type="submit"
+            disabled={saving}
+            className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+          >
+            <Save size={17} />
+            {saving ? "Saving..." : "Save Changes"}
+          </button>
+        </div>
+      </form>
     </div>
   );
 }

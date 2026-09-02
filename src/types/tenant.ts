@@ -19,27 +19,16 @@ export interface CreateTenantInput {
   name: string;
   code: string;
   domain: string;
-  plan: TenantPlan;
   status: TenantStatus;
+  plan: TenantPlan;
+  users?: number;
+  organizations?: number;
 }
 
 export interface UpdateTenantInput {
   name: string;
   code: string;
   domain: string;
-  plan: TenantPlan;
   status: TenantStatus;
-}
-
-export interface TenantFilters {
-  search?: string;
-  status?: TenantStatus | "All";
-  plan?: TenantPlan | "All";
-}
-
-export interface TenantStats {
-  users: number;
-  organizations: number;
-  activeUsers: number;
-  storage: number;
+  plan: TenantPlan;
 }

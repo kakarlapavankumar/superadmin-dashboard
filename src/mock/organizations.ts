@@ -1,184 +1,164 @@
-import type {
-  Organization,
-  CreateOrganizationInput,
-  UpdateOrganizationInput,
-} from "../types/organization";
+import type { Organization } from "../types/organization";
 
 export const organizations: Organization[] = [
   {
-    id: "1",
-    name: "OneCloud Technologies",
-    tenantId: "tenant-001",
-    tenant: "OneCloud Technologies",
+    id: "ORG-001",
+    name: "Acme Headquarters",
+    code: "ACME-HQ",
+    description: "Main corporate organization for Acme Corporation.",
+    tenantId: "1",
+    tenantName: "Acme Corporation",
     industry: "Technology",
-    location: "Hyderabad, India",
-    email: "admin@onecloud.com",
-    phone: "+91 9876543210",
-    employees: 250,
+    location: "New York, USA",
+    email: "hq@acme.com",
+    phone: "+1 212 555 1001",
+    employees: 420,
     status: "Active",
-    createdAt: "2026-01-10",
+    createdAt: "2026-01-15",
     updatedAt: "2026-08-20",
   },
   {
-    id: "2",
-    name: "Acme Corporation",
-    tenantId: "tenant-002",
-    tenant: "Acme Corporation",
-    industry: "Software",
-    location: "Bangalore, India",
-    email: "admin@acme.com",
-    phone: "+91 9876543211",
-    employees: 180,
+    id: "ORG-002",
+    name: "Acme India",
+    code: "ACME-IND",
+    description: "India operations organization.",
+    tenantId: "1",
+    tenantName: "Acme Corporation",
+    industry: "Technology",
+    location: "Hyderabad, India",
+    email: "india@acme.com",
+    phone: "+91 40 5555 1002",
+    employees: 280,
     status: "Active",
-    createdAt: "2026-01-15",
-    updatedAt: "2026-08-21",
-  },
-  {
-    id: "3",
-    name: "Global Solutions",
-    tenantId: "tenant-003",
-    tenant: "Global Solutions",
-    industry: "Consulting",
-    location: "Mumbai, India",
-    email: "contact@globalsolutions.com",
-    phone: "+91 9876543212",
-    employees: 120,
-    status: "Inactive",
-    createdAt: "2026-02-05",
-    updatedAt: "2026-08-15",
-  },
-  {
-    id: "4",
-    name: "TechNova Systems",
-    tenantId: "tenant-004",
-    tenant: "TechNova Systems",
-    industry: "Information Technology",
-    location: "Chennai, India",
-    email: "info@technova.com",
-    phone: "+91 9876543213",
-    employees: 320,
-    status: "Active",
-    createdAt: "2026-02-18",
-    updatedAt: "2026-08-22",
-  },
-  {
-    id: "5",
-    name: "Innovate Labs",
-    tenantId: "tenant-005",
-    tenant: "Innovate Labs",
-    industry: "Research & Development",
-    location: "Pune, India",
-    email: "hello@innovatelabs.com",
-    phone: "+91 9876543214",
-    employees: 95,
-    status: "Active",
-    createdAt: "2026-03-01",
+    createdAt: "2026-02-10",
     updatedAt: "2026-08-18",
   },
   {
-    id: "6",
-    name: "CloudWorks",
-    tenantId: "tenant-006",
-    tenant: "CloudWorks",
-    industry: "Cloud Computing",
-    location: "Delhi, India",
-    email: "admin@cloudworks.com",
-    phone: "+91 9876543215",
+    id: "ORG-003",
+    name: "TechNova Corporate",
+    code: "TECH-CORP",
+    description: "Corporate organization for TechNova Solutions.",
+    tenantId: "2",
+    tenantName: "TechNova Solutions",
+    industry: "Software",
+    location: "San Francisco, USA",
+    email: "corporate@technova.com",
+    phone: "+1 415 555 2001",
+    employees: 350,
+    status: "Active",
+    createdAt: "2026-02-15",
+    updatedAt: "2026-08-19",
+  },
+  {
+    id: "ORG-004",
+    name: "TechNova Engineering",
+    code: "TECH-ENG",
+    description: "Engineering and product development organization.",
+    tenantId: "2",
+    tenantName: "TechNova Solutions",
+    industry: "Software",
+    location: "Austin, USA",
+    email: "engineering@technova.com",
+    phone: "+1 512 555 2002",
     employees: 210,
+    status: "Active",
+    createdAt: "2026-03-01",
+    updatedAt: "2026-08-17",
+  },
+  {
+    id: "ORG-005",
+    name: "Global Systems Main",
+    code: "GLOBAL-MAIN",
+    description: "Primary organization for Global Systems.",
+    tenantId: "3",
+    tenantName: "Global Systems",
+    industry: "IT Services",
+    location: "London, UK",
+    email: "admin@globalsystems.com",
+    phone: "+44 20 5555 3001",
+    employees: 160,
     status: "Inactive",
-    createdAt: "2026-03-12",
-    updatedAt: "2026-08-10",
+    createdAt: "2026-03-05",
+    updatedAt: "2026-08-18",
+  },
+  {
+    id: "ORG-006",
+    name: "CloudWorks Cloud",
+    code: "CLOUD-01",
+    description: "Cloud infrastructure and platform organization.",
+    tenantId: "4",
+    tenantName: "CloudWorks",
+    industry: "Cloud Computing",
+    location: "Seattle, USA",
+    email: "cloud@cloudworks.com",
+    phone: "+1 206 555 4001",
+    employees: 390,
+    status: "Active",
+    createdAt: "2026-03-20",
+    updatedAt: "2026-08-21",
+  },
+  {
+    id: "ORG-007",
+    name: "CloudWorks Enterprise",
+    code: "CLOUD-ENT",
+    description: "Enterprise solutions organization.",
+    tenantId: "4",
+    tenantName: "CloudWorks",
+    industry: "Cloud Computing",
+    location: "Dallas, USA",
+    email: "enterprise@cloudworks.com",
+    phone: "+1 214 555 4002",
+    employees: 270,
+    status: "Active",
+    createdAt: "2026-04-01",
+    updatedAt: "2026-08-21",
+  },
+  {
+    id: "ORG-008",
+    name: "Bright Technologies",
+    code: "BRIGHT-HQ",
+    description: "Headquarters organization for Bright Technologies.",
+    tenantId: "5",
+    tenantName: "Bright Technologies",
+    industry: "Technology",
+    location: "Boston, USA",
+    email: "contact@brighttech.com",
+    phone: "+1 617 555 5001",
+    employees: 190,
+    status: "Active",
+    createdAt: "2026-04-12",
+    updatedAt: "2026-08-22",
+  },
+  {
+    id: "ORG-009",
+    name: "Bright Research",
+    code: "BRIGHT-RND",
+    description: "Research and development organization.",
+    tenantId: "5",
+    tenantName: "Bright Technologies",
+    industry: "Research",
+    location: "Cambridge, USA",
+    email: "research@brighttech.com",
+    phone: "+1 617 555 5002",
+    employees: 120,
+    status: "Active",
+    createdAt: "2026-05-01",
+    updatedAt: "2026-08-22",
+  },
+  {
+    id: "ORG-010",
+    name: "Innovation Labs",
+    code: "INNOVATION",
+    description: "Innovation and emerging technology organization.",
+    tenantId: "2",
+    tenantName: "TechNova Solutions",
+    industry: "Research",
+    location: "San Jose, USA",
+    email: "labs@technova.com",
+    phone: "+1 408 555 6001",
+    employees: 95,
+    status: "Active",
+    createdAt: "2026-05-10",
+    updatedAt: "2026-08-20",
   },
 ];
-
-export const getMockOrganizations = (): Organization[] => {
-  return organizations;
-};
-
-export const getMockOrganization = (
-  id: string
-): Organization | undefined => {
-  return organizations.find(
-    (organization) => organization.id === id
-  );
-};
-
-export const createMockOrganization = (
-  data: CreateOrganizationInput
-): Organization => {
-  const newOrganization: Organization = {
-    id: crypto.randomUUID(),
-    name: data.name,
-    tenantId: data.tenantId,
-    tenant: data.tenant,
-    industry: data.industry,
-    location: data.location,
-    email: data.email,
-    phone: data.phone,
-    employees: data.employees,
-    status: data.status ?? "Active",
-    createdAt: new Date().toISOString(),
-  };
-
-  organizations.push(newOrganization);
-
-  return newOrganization;
-};
-
-export const updateMockOrganization = (
-  id: string,
-  data: UpdateOrganizationInput
-): Organization | undefined => {
-  const index = organizations.findIndex(
-    (organization) => organization.id === id
-  );
-
-  if (index === -1) {
-    return undefined;
-  }
-
-  organizations[index] = {
-    ...organizations[index],
-    ...data,
-    updatedAt: new Date().toISOString(),
-  };
-
-  return organizations[index];
-};
-
-export const deleteMockOrganization = (
-  id: string
-): boolean => {
-  const index = organizations.findIndex(
-    (organization) => organization.id === id
-  );
-
-  if (index === -1) {
-    return false;
-  }
-
-  organizations.splice(index, 1);
-
-  return true;
-};
-
-export const toggleMockOrganizationStatus = (
-  id: string
-): Organization | undefined => {
-  const organization = organizations.find(
-    (organization) => organization.id === id
-  );
-
-  if (!organization) {
-    return undefined;
-  }
-
-  organization.status =
-    organization.status === "Active"
-      ? "Inactive"
-      : "Active";
-
-  organization.updatedAt = new Date().toISOString();
-
-  return organization;
-};
