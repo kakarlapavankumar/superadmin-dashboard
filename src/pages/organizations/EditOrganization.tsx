@@ -1,87 +1,91 @@
 import { useEffect, useState } from "react";
 import { ArrowLeft, Save } from "lucide-react";
-import { useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 
-import { getOrganization, updateOrganization } from "../../api/organizationApi";
+import {
+  useOrganization,
+  useUpdateOrganization,
+} from "../../hooks/useOrganizations";
 
-import type {
-  OrganizationFormData,
-  OrganizationStatus,
-} from "../../types/organization";
+import type { OrganizationFormData } from "../../types/organization";
 
 const initialForm: OrganizationFormData = {
   name: "",
   code: "",
   description: "",
-  tenantId: "",
+
+  tenantId: 1,
   tenantName: "",
+
   industry: "",
   location: "",
+
   email: "",
   phone: "",
+
   employees: 0,
+
   status: "Active",
 };
 
-function EditOrganization() {
+export default function EditOrganization() {
+  const { id } = useParams<{
+    id: string;
+  }>();
+
   const navigate = useNavigate();
-  const { id } = useParams<{ id: string }>();
+
+  const { data: organization, isLoading, isError } = useOrganization(id);
+
+  const updateMutation = useUpdateOrganization();
 
   const [form, setForm] = useState<OrganizationFormData>(initialForm);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+
   const [error, setError] = useState("");
 
   useEffect(() => {
-    async function loadOrganization() {
-      if (!id) {
-        setError("Organization ID is missing.");
-        setLoading(false);
-        return;
-      }
-
-      try {
-        const organization = await getOrganization(id);
-
-        if (!organization) {
-          setError("Organization not found.");
-          return;
-        }
-
-        setForm({
-          name: organization.name,
-          code: organization.code,
-          description: organization.description,
-          tenantId: organization.tenantId,
-          tenantName: organization.tenantName,
-          industry: organization.industry,
-          location: organization.location,
-          email: organization.email,
-          phone: organization.phone,
-          employees: organization.employees,
-          status: organization.status,
-        });
-      } catch {
-        setError("Failed to load organization.");
-      } finally {
-        setLoading(false);
-      }
+    if (!organization) {
+      return;
     }
 
-    loadOrganization();
-  }, [id]);
+    queueMicrotask(() => {
+      setForm({
+        name: organization.name,
+        code: organization.code,
+        description: organization.description,
+
+        tenantId: organization.tenantId,
+        tenantName: organization.tenantName,
+
+        industry: organization.industry,
+        location: organization.location,
+
+        email: organization.email,
+        phone: organization.phone,
+
+        employees: organization.employees,
+
+        status: organization.status,
+      });
+    });
+  }, [organization]);
 
   const handleChange = (
-    field: keyof OrganizationFormData,
-    value: string | number,
+    event: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >,
   ) => {
+    const { name, value } = event.target;
+
     setForm((previous: OrganizationFormData) => ({
       ...previous,
-      [field]: value,
+
+      [name]:
+        name === "tenantId" || name === "employees" ? Number(value) : value,
     }));
   };
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
 
     if (!id) {
@@ -89,237 +93,308 @@ function EditOrganization() {
       return;
     }
 
-    setSaving(true);
+    if (!form.name.trim()) {
+      setError("Organization name is required.");
+      return;
+    }
+
+    if (!form.code.trim()) {
+      setError("Organization code is required.");
+      return;
+    }
+
+    if (!form.tenantName.trim()) {
+      setError("Tenant name is required.");
+      return;
+    }
+
     setError("");
 
     try {
-      await updateOrganization(id, {
-        ...form,
-        status: form.status as OrganizationStatus,
+      await updateMutation.mutateAsync({
+        id,
+        data: form,
       });
 
-      navigate("/organizations");
-    } catch {
-      setError("Failed to update organization.");
-    } finally {
-      setSaving(false);
+      navigate(`/organizations/${id}`);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Failed to update organization.",
+      );
     }
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex min-h-[400px] items-center justify-center">
-        <div className="text-sm text-slate-500">Loading organization...</div>
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-blue-600" />
       </div>
     );
   }
 
-  if (error && !form.name) {
+  if (isError || !organization) {
     return (
-      <div className="p-6">
-        <div className="rounded-xl border border-red-200 bg-red-50 p-5 text-red-700">
-          {error}
-        </div>
-        <button
-          onClick={() => navigate("/organizations")}
-          className="mt-4 inline-flex items-center gap-2 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white"
+      <div className="rounded-xl border border-red-200 bg-red-50 p-8 text-center">
+        <h2 className="text-lg font-semibold text-red-700">
+          Organization not found
+        </h2>
+
+        <p className="mt-2 text-sm text-red-600">
+          The organization you are trying to edit does not exist.
+        </p>
+
+        <Link
+          to="/organizations"
+          className="mt-5 inline-flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
         >
           <ArrowLeft size={16} />
           Back to Organizations
-        </button>
+        </Link>
       </div>
     );
   }
 
   return (
-    <div className="p-6">
-      <div className="mb-6 flex items-center gap-4">
-        <button
-          onClick={() => navigate("/organizations")}
-          className="rounded-lg border border-slate-200 p-2 hover:bg-slate-50"
+    <div className="mx-auto max-w-4xl space-y-6">
+      {/* Header */}
+
+      <div className="flex items-center gap-4">
+        <Link
+          to={`/organizations/${id}`}
+          className="rounded-lg border border-gray-300 p-2 text-gray-600 hover:bg-gray-50"
         >
-          <ArrowLeft size={18} />
-        </button>
+          <ArrowLeft size={20} />
+        </Link>
 
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">
+          <h1 className="text-2xl font-bold text-gray-900">
             Edit Organization
           </h1>
-          <p className="mt-1 text-sm text-slate-500">
+
+          <p className="mt-1 text-sm text-gray-500">
             Update organization information.
           </p>
         </div>
       </div>
 
-      {error && (
-        <div className="mb-5 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-          {error}
-        </div>
-      )}
+      {/* Form */}
 
       <form
         onSubmit={handleSubmit}
-        className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+        className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm"
       >
-        <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+        {error && (
+          <div className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {error}
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+          {/* Name */}
+
           <div>
-            <label className="mb-2 block text-sm font-medium text-slate-700">
+            <label className="mb-2 block text-sm font-medium text-gray-700">
               Organization Name
             </label>
+
             <input
+              name="name"
               value={form.name}
-              onChange={(e) => handleChange("name", e.target.value)}
-              required
-              className="w-full rounded-lg border border-slate-300 px-3 py-2.5 outline-none focus:border-blue-500"
+              onChange={handleChange}
+              className="w-full rounded-lg border border-gray-300 px-3 py-2.5 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              placeholder="Enter organization name"
             />
           </div>
 
+          {/* Code */}
+
           <div>
-            <label className="mb-2 block text-sm font-medium text-slate-700">
+            <label className="mb-2 block text-sm font-medium text-gray-700">
               Organization Code
             </label>
+
             <input
+              name="code"
               value={form.code}
-              onChange={(e) => handleChange("code", e.target.value)}
-              required
-              className="w-full rounded-lg border border-slate-300 px-3 py-2.5 outline-none focus:border-blue-500"
+              onChange={handleChange}
+              className="w-full rounded-lg border border-gray-300 px-3 py-2.5 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              placeholder="ORG-CODE"
             />
           </div>
 
+          {/* Tenant */}
+
           <div>
-            <label className="mb-2 block text-sm font-medium text-slate-700">
+            <label className="mb-2 block text-sm font-medium text-gray-700">
               Tenant Name
             </label>
+
             <input
+              name="tenantName"
               value={form.tenantName}
-              onChange={(e) => handleChange("tenantName", e.target.value)}
-              required
-              className="w-full rounded-lg border border-slate-300 px-3 py-2.5 outline-none focus:border-blue-500"
+              onChange={handleChange}
+              className="w-full rounded-lg border border-gray-300 px-3 py-2.5 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              placeholder="Enter tenant name"
             />
           </div>
 
+          {/* Tenant ID */}
+
           <div>
-            <label className="mb-2 block text-sm font-medium text-slate-700">
+            <label className="mb-2 block text-sm font-medium text-gray-700">
               Tenant ID
             </label>
-            <input
-              value={form.tenantId}
-              onChange={(e) => handleChange("tenantId", e.target.value)}
-              required
-              className="w-full rounded-lg border border-slate-300 px-3 py-2.5 outline-none focus:border-blue-500"
-            />
-          </div>
 
-          <div>
-            <label className="mb-2 block text-sm font-medium text-slate-700">
-              Industry
-            </label>
-            <input
-              value={form.industry}
-              onChange={(e) => handleChange("industry", e.target.value)}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2.5 outline-none focus:border-blue-500"
-            />
-          </div>
-
-          <div>
-            <label className="mb-2 block text-sm font-medium text-slate-700">
-              Location
-            </label>
-            <input
-              value={form.location}
-              onChange={(e) => handleChange("location", e.target.value)}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2.5 outline-none focus:border-blue-500"
-            />
-          </div>
-
-          <div>
-            <label className="mb-2 block text-sm font-medium text-slate-700">
-              Email
-            </label>
-            <input
-              type="email"
-              value={form.email}
-              onChange={(e) => handleChange("email", e.target.value)}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2.5 outline-none focus:border-blue-500"
-            />
-          </div>
-
-          <div>
-            <label className="mb-2 block text-sm font-medium text-slate-700">
-              Phone
-            </label>
-            <input
-              value={form.phone}
-              onChange={(e) => handleChange("phone", e.target.value)}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2.5 outline-none focus:border-blue-500"
-            />
-          </div>
-
-          <div>
-            <label className="mb-2 block text-sm font-medium text-slate-700">
-              Employees
-            </label>
             <input
               type="number"
-              min="0"
-              value={form.employees}
-              onChange={(e) =>
-                handleChange("employees", Number(e.target.value))
-              }
-              className="w-full rounded-lg border border-slate-300 px-3 py-2.5 outline-none focus:border-blue-500"
+              name="tenantId"
+              value={form.tenantId}
+              onChange={handleChange}
+              min="1"
+              className="w-full rounded-lg border border-gray-300 px-3 py-2.5 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
             />
           </div>
 
+          {/* Industry */}
+
           <div>
-            <label className="mb-2 block text-sm font-medium text-slate-700">
+            <label className="mb-2 block text-sm font-medium text-gray-700">
+              Industry
+            </label>
+
+            <input
+              name="industry"
+              value={form.industry}
+              onChange={handleChange}
+              className="w-full rounded-lg border border-gray-300 px-3 py-2.5 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              placeholder="Technology"
+            />
+          </div>
+
+          {/* Location */}
+
+          <div>
+            <label className="mb-2 block text-sm font-medium text-gray-700">
+              Location
+            </label>
+
+            <input
+              name="location"
+              value={form.location}
+              onChange={handleChange}
+              className="w-full rounded-lg border border-gray-300 px-3 py-2.5 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              placeholder="Hyderabad, India"
+            />
+          </div>
+
+          {/* Email */}
+
+          <div>
+            <label className="mb-2 block text-sm font-medium text-gray-700">
+              Email
+            </label>
+
+            <input
+              type="email"
+              name="email"
+              value={form.email}
+              onChange={handleChange}
+              className="w-full rounded-lg border border-gray-300 px-3 py-2.5 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              placeholder="organization@example.com"
+            />
+          </div>
+
+          {/* Phone */}
+
+          <div>
+            <label className="mb-2 block text-sm font-medium text-gray-700">
+              Phone
+            </label>
+
+            <input
+              name="phone"
+              value={form.phone}
+              onChange={handleChange}
+              className="w-full rounded-lg border border-gray-300 px-3 py-2.5 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              placeholder="+91 9876543210"
+            />
+          </div>
+
+          {/* Employees */}
+
+          <div>
+            <label className="mb-2 block text-sm font-medium text-gray-700">
+              Employees
+            </label>
+
+            <input
+              type="number"
+              name="employees"
+              value={form.employees}
+              onChange={handleChange}
+              min="0"
+              className="w-full rounded-lg border border-gray-300 px-3 py-2.5 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+            />
+          </div>
+
+          {/* Status */}
+
+          <div>
+            <label className="mb-2 block text-sm font-medium text-gray-700">
               Status
             </label>
+
             <select
+              name="status"
               value={form.status}
-              onChange={(e) =>
-                handleChange("status", e.target.value as OrganizationStatus)
-              }
-              className="w-full rounded-lg border border-slate-300 px-3 py-2.5 outline-none focus:border-blue-500"
+              onChange={handleChange}
+              className="w-full rounded-lg border border-gray-300 px-3 py-2.5 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
             >
               <option value="Active">Active</option>
+
               <option value="Inactive">Inactive</option>
             </select>
           </div>
 
+          {/* Description */}
+
           <div className="md:col-span-2">
-            <label className="mb-2 block text-sm font-medium text-slate-700">
+            <label className="mb-2 block text-sm font-medium text-gray-700">
               Description
             </label>
+
             <textarea
-              rows={4}
+              name="description"
               value={form.description}
-              onChange={(e) => handleChange("description", e.target.value)}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2.5 outline-none focus:border-blue-500"
+              onChange={handleChange}
+              rows={4}
+              className="w-full resize-none rounded-lg border border-gray-300 px-3 py-2.5 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              placeholder="Describe this organization..."
             />
           </div>
         </div>
 
-        <div className="mt-6 flex justify-end gap-3 border-t border-slate-200 pt-5">
-          <button
-            type="button"
-            onClick={() => navigate("/organizations")}
-            className="rounded-lg border border-slate-300 px-5 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+        {/* Buttons */}
+
+        <div className="mt-8 flex justify-end gap-3 border-t border-gray-200 pt-6">
+          <Link
+            to={`/organizations/${id}`}
+            className="rounded-lg border border-gray-300 px-5 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
           >
             Cancel
-          </button>
+          </Link>
 
           <button
             type="submit"
-            disabled={saving}
-            className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+            disabled={updateMutation.isPending}
+            className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <Save size={17} />
-            {saving ? "Saving..." : "Save Changes"}
+
+            {updateMutation.isPending ? "Saving..." : "Save Changes"}
           </button>
         </div>
       </form>
     </div>
   );
 }
-
-export default EditOrganization;

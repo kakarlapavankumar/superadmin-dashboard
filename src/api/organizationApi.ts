@@ -11,7 +11,7 @@ let organizationData: Organization[] = [...organizations];
 export interface OrganizationFilters {
   search?: string;
   status?: string;
-  tenantId?: string;
+  tenantId?: number | string;
   page?: number;
   limit?: number;
 }
@@ -23,6 +23,10 @@ export interface OrganizationListResponse {
   limit: number;
   totalPages: number;
 }
+
+/* --------------------------------
+   GET ORGANIZATIONS
+--------------------------------- */
 
 export async function getOrganizations(
   filters: OrganizationFilters = {},
@@ -37,34 +41,51 @@ export async function getOrganizations(
 
   let result = [...organizationData];
 
+  /* Search */
+
   if (search.trim()) {
-    const value = search.toLowerCase();
+    const value = search.toLowerCase().trim();
 
     result = result.filter(
       (organization) =>
         organization.name.toLowerCase().includes(value) ||
         organization.code.toLowerCase().includes(value) ||
-        organization.tenantName.toLowerCase().includes(value),
+        organization.tenantName.toLowerCase().includes(value) ||
+        organization.industry.toLowerCase().includes(value) ||
+        organization.location.toLowerCase().includes(value),
     );
   }
+
+  /* Status */
 
   if (status !== "all") {
     result = result.filter((organization) => organization.status === status);
   }
 
+  /* Tenant */
+
   if (tenantId !== "all") {
+    const numericTenantId = Number(tenantId);
+
     result = result.filter(
-      (organization) => organization.tenantId === tenantId,
+      (organization) => organization.tenantId === numericTenantId,
     );
   }
 
+  /* Pagination */
+
   const total = result.length;
-  const totalPages = Math.max(1, Math.ceil(total / limit));
+
+  const totalPages = total === 0 ? 1 : Math.ceil(total / limit);
+
   const safePage = Math.min(Math.max(page, 1), totalPages);
-  const start = (safePage - 1) * limit;
+
+  const startIndex = (safePage - 1) * limit;
+
+  const data = result.slice(startIndex, startIndex + limit);
 
   return {
-    data: result.slice(start, start + limit),
+    data,
     total,
     page: safePage,
     limit,
@@ -72,36 +93,65 @@ export async function getOrganizations(
   };
 }
 
+/* --------------------------------
+   GET SINGLE ORGANIZATION
+--------------------------------- */
+
 export async function getOrganization(
   id: string,
 ): Promise<Organization | undefined> {
   return organizationData.find((organization) => organization.id === id);
 }
 
+/* --------------------------------
+   CREATE ORGANIZATION
+--------------------------------- */
+
 export async function createOrganization(
   input: CreateOrganizationInput,
 ): Promise<Organization> {
+  const newNumber = organizationData.length + 1;
+
+  const today = new Date().toISOString().split("T")[0];
+
   const newOrganization: Organization = {
-    id: `ORG-${String(organizationData.length + 1).padStart(3, "0")}`,
+    id: `ORG-${String(newNumber).padStart(3, "0")}`,
+
     name: input.name,
+
     code: input.code,
+
     description: input.description,
-    tenantId: input.tenantId,
+
+    tenantId: Number(input.tenantId),
+
     tenantName: input.tenantName,
+
     industry: input.industry,
+
     location: input.location,
+
     email: input.email,
+
     phone: input.phone,
+
     employees: input.employees ?? 0,
+
     status: input.status,
-    createdAt: new Date().toISOString().split("T")[0],
-    updatedAt: new Date().toISOString().split("T")[0],
+
+    createdAt: today,
+
+    updatedAt: today,
   };
 
   organizationData.push(newOrganization);
 
   return newOrganization;
 }
+
+/* --------------------------------
+   UPDATE ORGANIZATION
+--------------------------------- */
 
 export async function updateOrganization(
   id: string,
@@ -115,10 +165,34 @@ export async function updateOrganization(
     throw new Error("Organization not found");
   }
 
+  const today = new Date().toISOString().split("T")[0];
+
   const updatedOrganization: Organization = {
     ...organizationData[index],
-    ...input,
-    updatedAt: new Date().toISOString().split("T")[0],
+
+    name: input.name,
+
+    code: input.code,
+
+    description: input.description,
+
+    tenantId: Number(input.tenantId),
+
+    tenantName: input.tenantName,
+
+    industry: input.industry,
+
+    location: input.location,
+
+    email: input.email,
+
+    phone: input.phone,
+
+    employees: input.employees ?? 0,
+
+    status: input.status,
+
+    updatedAt: today,
   };
 
   organizationData[index] = updatedOrganization;
@@ -126,25 +200,112 @@ export async function updateOrganization(
   return updatedOrganization;
 }
 
+/* --------------------------------
+   DELETE ORGANIZATION
+--------------------------------- */
+
 export async function deleteOrganization(id: string): Promise<void> {
+  const exists = organizationData.some(
+    (organization) => organization.id === id,
+  );
+
+  if (!exists) {
+    throw new Error("Organization not found");
+  }
+
   organizationData = organizationData.filter(
     (organization) => organization.id !== id,
   );
 }
 
-export async function toggleOrganizationStatus(
-  id: string,
-): Promise<Organization> {
-  const organization = organizationData.find((item) => item.id === id);
+/* --------------------------------
+   ACTIVATE ORGANIZATION
+--------------------------------- */
 
-  if (!organization) {
+export async function activateOrganization(id: string): Promise<Organization> {
+  const index = organizationData.findIndex(
+    (organization) => organization.id === id,
+  );
+
+  if (index === -1) {
     throw new Error("Organization not found");
   }
 
-  organization.status =
-    organization.status === "Active" ? "Inactive" : "Active";
+  const today = new Date().toISOString().split("T")[0];
 
-  organization.updatedAt = new Date().toISOString().split("T")[0];
+  organizationData[index] = {
+    ...organizationData[index],
 
-  return organization;
+    status: "Active",
+
+    updatedAt: today,
+  };
+
+  return organizationData[index];
+}
+
+/* --------------------------------
+   DEACTIVATE ORGANIZATION
+--------------------------------- */
+
+export async function deactivateOrganization(
+  id: string,
+): Promise<Organization> {
+  const index = organizationData.findIndex(
+    (organization) => organization.id === id,
+  );
+
+  if (index === -1) {
+    throw new Error("Organization not found");
+  }
+
+  const today = new Date().toISOString().split("T")[0];
+
+  organizationData[index] = {
+    ...organizationData[index],
+
+    status: "Inactive",
+
+    updatedAt: today,
+  };
+
+  return organizationData[index];
+}
+
+/* --------------------------------
+   TOGGLE STATUS
+--------------------------------- */
+
+export async function toggleOrganizationStatus(
+  id: string,
+): Promise<Organization> {
+  const index = organizationData.findIndex(
+    (organization) => organization.id === id,
+  );
+
+  if (index === -1) {
+    throw new Error("Organization not found");
+  }
+
+  const organization = organizationData[index];
+
+  const today = new Date().toISOString().split("T")[0];
+
+  organizationData[index] = {
+    ...organization,
+
+    status: organization.status === "Active" ? "Inactive" : "Active",
+
+    updatedAt: today,
+  };
+
+  return organizationData[index];
+}
+
+/* --------------------------------
+   RESET DATA
+--------------------------------- */
+
+export async function resetOrganizations(): Promise<void> {
+  organizationData = [...organizations];
 }

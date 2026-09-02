@@ -1,214 +1,172 @@
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+
+import {
+  getOrganizations,
+  getOrganization,
+  createOrganization,
+  updateOrganization,
+  deleteOrganization,
+  activateOrganization,
+  deactivateOrganization,
+  toggleOrganizationStatus,
+} from "../api/organizationApi";
+
 import type {
-  Organization,
-  OrganizationFormData,
+  CreateOrganizationInput,
+  UpdateOrganizationInput,
 } from "../types/organization";
 
-import { organizations as initialOrganizations } from "../mock/organizations";
+import type { OrganizationFilters } from "../api/organizationApi";
 
-const STORAGE_KEY = "onecloud-organizations";
+const ORGANIZATIONS_KEY = ["organizations"];
 
-const delay = (ms = 300) =>
-  new Promise<void>((resolve) => setTimeout(resolve, ms));
+/* --------------------------------
+   GET ORGANIZATIONS
+--------------------------------- */
 
-function loadOrganizations(): Organization[] {
-  const stored = localStorage.getItem(STORAGE_KEY);
+export function useOrganizations(filters?: OrganizationFilters) {
+  return useQuery({
+    queryKey: [...ORGANIZATIONS_KEY, filters],
 
-  if (!stored) {
-    localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify(initialOrganizations)
-    );
-
-    return [...initialOrganizations];
-  }
-
-  try {
-    const parsed = JSON.parse(stored);
-
-    if (Array.isArray(parsed)) {
-      return parsed;
-    }
-
-    return [...initialOrganizations];
-  } catch {
-    localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify(initialOrganizations)
-    );
-
-    return [...initialOrganizations];
-  }
+    queryFn: () => getOrganizations(filters),
+  });
 }
 
-function saveOrganizations(data: Organization[]) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+/* --------------------------------
+   GET ORGANIZATION
+--------------------------------- */
+
+export function useOrganization(id: string | undefined) {
+  return useQuery({
+    queryKey: ["organization", id],
+
+    queryFn: () => getOrganization(id as string),
+
+    enabled: Boolean(id),
+  });
 }
 
-export async function getOrganizations(): Promise<Organization[]> {
-  await delay();
+/* --------------------------------
+   CREATE
+--------------------------------- */
 
-  return loadOrganizations();
+export function useCreateOrganization() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: CreateOrganizationInput) => createOrganization(data),
+
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ORGANIZATIONS_KEY,
+      });
+    },
+  });
 }
 
-export async function getOrganization(
-  id: string
-): Promise<Organization> {
-  await delay();
+/* --------------------------------
+   UPDATE
+--------------------------------- */
 
-  const data = loadOrganizations();
+export function useUpdateOrganization() {
+  const queryClient = useQueryClient();
 
-  const organization = data.find((item) => item.id === id);
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: UpdateOrganizationInput }) =>
+      updateOrganization(id, data),
 
-  if (!organization) {
-    throw new Error("Organization not found");
-  }
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ORGANIZATIONS_KEY,
+      });
 
-  return organization;
+      queryClient.invalidateQueries({
+        queryKey: ["organization", variables.id],
+      });
+    },
+  });
 }
 
-export async function createOrganization(
-  formData: OrganizationFormData
-): Promise<Organization> {
-  await delay();
+/* --------------------------------
+   DELETE
+--------------------------------- */
 
-  const data = loadOrganizations();
+export function useDeleteOrganization() {
+  const queryClient = useQueryClient();
 
-  const exists = data.some(
-    (organization) =>
-      organization.code.toLowerCase() === formData.code.toLowerCase()
-  );
+  return useMutation({
+    mutationFn: (id: string) => deleteOrganization(id),
 
-  if (exists) {
-    throw new Error("Organization code already exists");
-  }
-
-  const now = new Date().toISOString();
-
-  const newOrganization: Organization = {
-    id: crypto.randomUUID(),
-    name: formData.name,
-    code: formData.code,
-    tenantId: formData.tenantId,
-    description: formData.description,
-    industry: formData.industry,
-    location: formData.location,
-    email: formData.email,
-    phone: formData.phone,
-    employees: Number(formData.employees),
-    status: "Active",
-    createdAt: now,
-    updatedAt: now,
-  };
-
-  const updated = [...data, newOrganization];
-
-  saveOrganizations(updated);
-
-  return newOrganization;
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ORGANIZATIONS_KEY,
+      });
+    },
+  });
 }
 
-export async function updateOrganization(
-  id: string,
-  formData: OrganizationFormData
-): Promise<Organization> {
-  await delay();
+/* --------------------------------
+   ACTIVATE
+--------------------------------- */
 
-  const data = loadOrganizations();
+export function useActivateOrganization() {
+  const queryClient = useQueryClient();
 
-  const index = data.findIndex(
-    (organization) => organization.id === id
-  );
+  return useMutation({
+    mutationFn: (id: string) => activateOrganization(id),
 
-  if (index === -1) {
-    throw new Error("Organization not found");
-  }
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({
+        queryKey: ORGANIZATIONS_KEY,
+      });
 
-  const duplicateCode = data.some(
-    (organization) =>
-      organization.id !== id &&
-      organization.code.toLowerCase() === formData.code.toLowerCase()
-  );
-
-  if (duplicateCode) {
-    throw new Error("Organization code already exists");
-  }
-
-  const updatedOrganization: Organization = {
-    ...data[index],
-    name: formData.name,
-    code: formData.code,
-    tenantId: formData.tenantId,
-    description: formData.description,
-    industry: formData.industry,
-    location: formData.location,
-    email: formData.email,
-    phone: formData.phone,
-    employees: Number(formData.employees),
-    updatedAt: new Date().toISOString(),
-  };
-
-  const updated = [...data];
-
-  updated[index] = updatedOrganization;
-
-  saveOrganizations(updated);
-
-  return updatedOrganization;
+      queryClient.invalidateQueries({
+        queryKey: ["organization", id],
+      });
+    },
+  });
 }
 
-export async function deleteOrganization(
-  id: string
-): Promise<void> {
-  await delay();
+/* --------------------------------
+   DEACTIVATE
+--------------------------------- */
 
-  const data = loadOrganizations();
+export function useDeactivateOrganization() {
+  const queryClient = useQueryClient();
 
-  const exists = data.some(
-    (organization) => organization.id === id
-  );
+  return useMutation({
+    mutationFn: (id: string) => deactivateOrganization(id),
 
-  if (!exists) {
-    throw new Error("Organization not found");
-  }
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({
+        queryKey: ORGANIZATIONS_KEY,
+      });
 
-  const updated = data.filter(
-    (organization) => organization.id !== id
-  );
-
-  saveOrganizations(updated);
+      queryClient.invalidateQueries({
+        queryKey: ["organization", id],
+      });
+    },
+  });
 }
 
-export async function toggleOrganizationStatus(
-  id: string
-): Promise<Organization> {
-  await delay();
+/* --------------------------------
+   TOGGLE
+--------------------------------- */
 
-  const data = loadOrganizations();
+export function useToggleOrganizationStatus() {
+  const queryClient = useQueryClient();
 
-  const index = data.findIndex(
-    (organization) => organization.id === id
-  );
+  return useMutation({
+    mutationFn: (id: string) => toggleOrganizationStatus(id),
 
-  if (index === -1) {
-    throw new Error("Organization not found");
-  }
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({
+        queryKey: ORGANIZATIONS_KEY,
+      });
 
-  const organization = data[index];
-
-  const updatedOrganization: Organization = {
-    ...organization,
-    status:
-      organization.status === "Active"
-        ? "Inactive"
-        : "Active",
-    updatedAt: new Date().toISOString(),
-  };
-
-  const updated = [...data];
-
-  updated[index] = updatedOrganization;
-
-  saveOrganizations(updated);
-
-  return updatedOrganization;
+      queryClient.invalidateQueries({
+        queryKey: ["organization", id],
+      });
+    },
+  });
 }
