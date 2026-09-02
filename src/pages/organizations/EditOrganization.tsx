@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
-import { ArrowLeft, Save } from "lucide-react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { ArrowLeft, Building2, Save } from "lucide-react";
 
 import {
   useOrganization,
@@ -9,66 +9,48 @@ import {
 
 import type { OrganizationFormData } from "../../types/organization";
 
-const initialForm: OrganizationFormData = {
-  name: "",
-  code: "",
-  description: "",
-
-  tenantId: 1,
-  tenantName: "",
-
-  industry: "",
-  location: "",
-
-  email: "",
-  phone: "",
-
-  employees: 0,
-
-  status: "Active",
-};
-
 export default function EditOrganization() {
-  const { id } = useParams<{
-    id: string;
-  }>();
-
   const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
 
-  const { data: organization, isLoading, isError } = useOrganization(id);
+  const organizationQuery = useOrganization(id);
+  const updateOrganization = useUpdateOrganization();
 
-  const updateMutation = useUpdateOrganization();
+  const organization = organizationQuery.data;
 
-  const [form, setForm] = useState<OrganizationFormData>(initialForm);
+  const [form, setForm] = useState<OrganizationFormData | null>(null);
 
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    if (!organization) {
-      return;
-    }
-
-    queueMicrotask(() => {
-      setForm({
-        name: organization.name,
-        code: organization.code,
-        description: organization.description,
-
-        tenantId: organization.tenantId,
-        tenantName: organization.tenantName,
-
-        industry: organization.industry,
-        location: organization.location,
-
-        email: organization.email,
-        phone: organization.phone,
-
-        employees: organization.employees,
-
-        status: organization.status,
-      });
-    });
-  }, [organization]);
+  const formData: OrganizationFormData =
+    form ??
+    (organization
+      ? {
+          name: organization.name,
+          code: organization.code,
+          description: organization.description,
+          tenantId: organization.tenantId,
+          tenantName: organization.tenantName,
+          industry: organization.industry,
+          location: organization.location,
+          email: organization.email,
+          phone: organization.phone,
+          employees: organization.employees,
+          status: organization.status,
+        }
+      : {
+          name: "",
+          code: "",
+          description: "",
+          tenantId: 0,
+          tenantName: "",
+          industry: "",
+          location: "",
+          email: "",
+          phone: "",
+          employees: 0,
+          status: "Active",
+        });
 
   const handleChange = (
     event: React.ChangeEvent<
@@ -77,15 +59,18 @@ export default function EditOrganization() {
   ) => {
     const { name, value } = event.target;
 
-    setForm((previous: OrganizationFormData) => ({
-      ...previous,
+    setForm((previous) => {
+      const current = previous ?? formData;
 
-      [name]:
-        name === "tenantId" || name === "employees" ? Number(value) : value,
-    }));
+      return {
+        ...current,
+        [name]:
+          name === "tenantId" || name === "employees" ? Number(value) : value,
+      };
+    });
   };
 
-  const handleSubmit = async (event: React.FormEvent) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     if (!id) {
@@ -93,27 +78,69 @@ export default function EditOrganization() {
       return;
     }
 
-    if (!form.name.trim()) {
+    if (!formData.name.trim()) {
       setError("Organization name is required.");
       return;
     }
 
-    if (!form.code.trim()) {
+    if (!formData.code.trim()) {
       setError("Organization code is required.");
       return;
     }
 
-    if (!form.tenantName.trim()) {
+    if (!formData.tenantName.trim()) {
       setError("Tenant name is required.");
+      return;
+    }
+
+    if (!formData.industry.trim()) {
+      setError("Industry is required.");
+      return;
+    }
+
+    if (!formData.location.trim()) {
+      setError("Location is required.");
+      return;
+    }
+
+    if (!formData.email.trim()) {
+      setError("Email is required.");
+      return;
+    }
+
+    if (!formData.phone.trim()) {
+      setError("Phone number is required.");
+      return;
+    }
+
+    if (formData.tenantId <= 0) {
+      setError("Tenant ID must be greater than 0.");
+      return;
+    }
+
+    if (formData.employees < 0) {
+      setError("Employees cannot be negative.");
       return;
     }
 
     setError("");
 
     try {
-      await updateMutation.mutateAsync({
+      await updateOrganization.mutateAsync({
         id,
-        data: form,
+        data: {
+          name: formData.name.trim(),
+          code: formData.code.trim(),
+          description: formData.description.trim(),
+          tenantId: formData.tenantId,
+          tenantName: formData.tenantName.trim(),
+          industry: formData.industry.trim(),
+          location: formData.location.trim(),
+          email: formData.email.trim(),
+          phone: formData.phone.trim(),
+          employees: formData.employees,
+          status: formData.status,
+        },
       });
 
       navigate(`/organizations/${id}`);
@@ -124,274 +151,355 @@ export default function EditOrganization() {
     }
   };
 
-  if (isLoading) {
+  if (organizationQuery.isLoading) {
     return (
       <div className="flex min-h-[400px] items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-blue-600" />
+        <div className="text-sm text-slate-500">Loading organization...</div>
       </div>
     );
   }
 
-  if (isError || !organization) {
+  if (organizationQuery.isError) {
     return (
-      <div className="rounded-xl border border-red-200 bg-red-50 p-8 text-center">
+      <div className="rounded-xl border border-red-200 bg-red-50 p-6">
         <h2 className="text-lg font-semibold text-red-700">
-          Organization not found
+          Failed to load organization
         </h2>
 
         <p className="mt-2 text-sm text-red-600">
+          {organizationQuery.error instanceof Error
+            ? organizationQuery.error.message
+            : "Something went wrong."}
+        </p>
+
+        <button
+          type="button"
+          onClick={() => navigate("/organizations")}
+          className="mt-4 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
+        >
+          Back to Organizations
+        </button>
+      </div>
+    );
+  }
+
+  if (!organization) {
+    return (
+      <div className="rounded-xl border border-slate-200 bg-white p-8 text-center">
+        <Building2 className="mx-auto h-12 w-12 text-slate-400" />
+
+        <h2 className="mt-4 text-lg font-semibold text-slate-800">
+          Organization not found
+        </h2>
+
+        <p className="mt-2 text-sm text-slate-500">
           The organization you are trying to edit does not exist.
         </p>
 
-        <Link
-          to="/organizations"
-          className="mt-5 inline-flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
+        <button
+          type="button"
+          onClick={() => navigate("/organizations")}
+          className="mt-5 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
         >
-          <ArrowLeft size={16} />
           Back to Organizations
-        </Link>
+        </button>
       </div>
     );
   }
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6">
+    <div className="space-y-6">
       {/* Header */}
-
-      <div className="flex items-center gap-4">
-        <Link
-          to={`/organizations/${id}`}
-          className="rounded-lg border border-gray-300 p-2 text-gray-600 hover:bg-gray-50"
+      <div>
+        <button
+          type="button"
+          onClick={() => navigate(`/organizations/${organization.id}`)}
+          className="mb-4 inline-flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-slate-900"
         >
-          <ArrowLeft size={20} />
-        </Link>
+          <ArrowLeft className="h-4 w-4" />
+          Back to Organization
+        </button>
 
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">
-            Edit Organization
-          </h1>
+        <div className="flex items-center gap-3">
+          <div className="rounded-xl bg-indigo-50 p-3">
+            <Building2 className="h-6 w-6 text-indigo-600" />
+          </div>
 
-          <p className="mt-1 text-sm text-gray-500">
-            Update organization information.
-          </p>
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900">
+              Edit Organization
+            </h1>
+
+            <p className="mt-1 text-sm text-slate-500">
+              Update organization information and settings.
+            </p>
+          </div>
         </div>
       </div>
 
       {/* Form */}
-
       <form
         onSubmit={handleSubmit}
-        className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm"
+        className="rounded-2xl border border-slate-200 bg-white shadow-sm"
       >
-        {error && (
-          <div className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-            {error}
-          </div>
-        )}
+        <div className="border-b border-slate-200 px-6 py-5">
+          <h2 className="text-lg font-semibold text-slate-900">
+            Organization Information
+          </h2>
 
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-          {/* Name */}
+          <p className="mt-1 text-sm text-slate-500">
+            Modify the details below and save your changes.
+          </p>
+        </div>
 
+        <div className="grid gap-6 p-6 md:grid-cols-2">
+          {/* Organization Name */}
           <div>
-            <label className="mb-2 block text-sm font-medium text-gray-700">
+            <label
+              htmlFor="name"
+              className="mb-2 block text-sm font-medium text-slate-700"
+            >
               Organization Name
             </label>
 
             <input
+              id="name"
               name="name"
-              value={form.name}
+              type="text"
+              value={formData.name}
               onChange={handleChange}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2.5 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
               placeholder="Enter organization name"
+              className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
             />
           </div>
 
-          {/* Code */}
-
+          {/* Organization Code */}
           <div>
-            <label className="mb-2 block text-sm font-medium text-gray-700">
+            <label
+              htmlFor="code"
+              className="mb-2 block text-sm font-medium text-slate-700"
+            >
               Organization Code
             </label>
 
             <input
+              id="code"
               name="code"
-              value={form.code}
+              type="text"
+              value={formData.code}
               onChange={handleChange}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2.5 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-              placeholder="ORG-CODE"
+              placeholder="ORG-001"
+              className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm uppercase outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
             />
           </div>
 
-          {/* Tenant */}
-
+          {/* Tenant Name */}
           <div>
-            <label className="mb-2 block text-sm font-medium text-gray-700">
+            <label
+              htmlFor="tenantName"
+              className="mb-2 block text-sm font-medium text-slate-700"
+            >
               Tenant Name
             </label>
 
             <input
+              id="tenantName"
               name="tenantName"
-              value={form.tenantName}
+              type="text"
+              value={formData.tenantName}
               onChange={handleChange}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2.5 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
               placeholder="Enter tenant name"
+              className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
             />
           </div>
 
           {/* Tenant ID */}
-
           <div>
-            <label className="mb-2 block text-sm font-medium text-gray-700">
+            <label
+              htmlFor="tenantId"
+              className="mb-2 block text-sm font-medium text-slate-700"
+            >
               Tenant ID
             </label>
 
             <input
-              type="number"
+              id="tenantId"
               name="tenantId"
-              value={form.tenantId}
-              onChange={handleChange}
+              type="number"
               min="1"
-              className="w-full rounded-lg border border-gray-300 px-3 py-2.5 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              value={formData.tenantId}
+              onChange={handleChange}
+              className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
             />
           </div>
 
           {/* Industry */}
-
           <div>
-            <label className="mb-2 block text-sm font-medium text-gray-700">
+            <label
+              htmlFor="industry"
+              className="mb-2 block text-sm font-medium text-slate-700"
+            >
               Industry
             </label>
 
             <input
+              id="industry"
               name="industry"
-              value={form.industry}
+              type="text"
+              value={formData.industry}
               onChange={handleChange}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2.5 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
               placeholder="Technology"
+              className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
             />
           </div>
 
           {/* Location */}
-
           <div>
-            <label className="mb-2 block text-sm font-medium text-gray-700">
+            <label
+              htmlFor="location"
+              className="mb-2 block text-sm font-medium text-slate-700"
+            >
               Location
             </label>
 
             <input
+              id="location"
               name="location"
-              value={form.location}
+              type="text"
+              value={formData.location}
               onChange={handleChange}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2.5 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
               placeholder="Hyderabad, India"
+              className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
             />
           </div>
 
           {/* Email */}
-
           <div>
-            <label className="mb-2 block text-sm font-medium text-gray-700">
+            <label
+              htmlFor="email"
+              className="mb-2 block text-sm font-medium text-slate-700"
+            >
               Email
             </label>
 
             <input
-              type="email"
+              id="email"
               name="email"
-              value={form.email}
+              type="email"
+              value={formData.email}
               onChange={handleChange}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2.5 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
               placeholder="organization@example.com"
+              className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
             />
           </div>
 
           {/* Phone */}
-
           <div>
-            <label className="mb-2 block text-sm font-medium text-gray-700">
+            <label
+              htmlFor="phone"
+              className="mb-2 block text-sm font-medium text-slate-700"
+            >
               Phone
             </label>
 
             <input
+              id="phone"
               name="phone"
-              value={form.phone}
+              type="text"
+              value={formData.phone}
               onChange={handleChange}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2.5 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-              placeholder="+91 9876543210"
+              placeholder="+91 98765 43210"
+              className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
             />
           </div>
 
           {/* Employees */}
-
           <div>
-            <label className="mb-2 block text-sm font-medium text-gray-700">
+            <label
+              htmlFor="employees"
+              className="mb-2 block text-sm font-medium text-slate-700"
+            >
               Employees
             </label>
 
             <input
-              type="number"
+              id="employees"
               name="employees"
-              value={form.employees}
-              onChange={handleChange}
+              type="number"
               min="0"
-              className="w-full rounded-lg border border-gray-300 px-3 py-2.5 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              value={formData.employees}
+              onChange={handleChange}
+              className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
             />
           </div>
 
           {/* Status */}
-
           <div>
-            <label className="mb-2 block text-sm font-medium text-gray-700">
+            <label
+              htmlFor="status"
+              className="mb-2 block text-sm font-medium text-slate-700"
+            >
               Status
             </label>
 
             <select
+              id="status"
               name="status"
-              value={form.status}
+              value={formData.status}
               onChange={handleChange}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2.5 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
             >
               <option value="Active">Active</option>
-
               <option value="Inactive">Inactive</option>
             </select>
           </div>
 
           {/* Description */}
-
           <div className="md:col-span-2">
-            <label className="mb-2 block text-sm font-medium text-gray-700">
+            <label
+              htmlFor="description"
+              className="mb-2 block text-sm font-medium text-slate-700"
+            >
               Description
             </label>
 
             <textarea
+              id="description"
               name="description"
-              value={form.description}
+              value={formData.description}
               onChange={handleChange}
               rows={4}
-              className="w-full resize-none rounded-lg border border-gray-300 px-3 py-2.5 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-              placeholder="Describe this organization..."
+              placeholder="Enter organization description"
+              className="w-full resize-none rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
             />
           </div>
         </div>
 
-        {/* Buttons */}
+        {/* Error */}
+        {error && (
+          <div className="mx-6 mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {error}
+          </div>
+        )}
 
-        <div className="mt-8 flex justify-end gap-3 border-t border-gray-200 pt-6">
-          <Link
-            to={`/organizations/${id}`}
-            className="rounded-lg border border-gray-300 px-5 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
+        {/* Buttons */}
+        <div className="flex flex-col-reverse gap-3 border-t border-slate-200 px-6 py-5 sm:flex-row sm:justify-end">
+          <button
+            type="button"
+            onClick={() => navigate(`/organizations/${organization.id}`)}
+            className="rounded-lg border border-slate-300 px-5 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
           >
             Cancel
-          </Link>
+          </button>
 
           <button
             type="submit"
-            disabled={updateMutation.isPending}
-            className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+            disabled={updateOrganization.isPending}
+            className="inline-flex items-center justify-center gap-2 rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            <Save size={17} />
+            <Save className="h-4 w-4" />
 
-            {updateMutation.isPending ? "Saving..." : "Save Changes"}
+            {updateOrganization.isPending ? "Saving..." : "Save Changes"}
           </button>
         </div>
       </form>

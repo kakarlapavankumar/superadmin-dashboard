@@ -11,12 +11,10 @@ export interface Organization {
 
   industry: string;
   location: string;
-
   email: string;
   phone: string;
 
   employees: number;
-
   status: OrganizationStatus;
 
   createdAt: string;
@@ -33,12 +31,10 @@ export interface OrganizationFormData {
 
   industry: string;
   location: string;
-
   email: string;
   phone: string;
 
   employees: number;
-
   status: OrganizationStatus;
 }
 
@@ -52,12 +48,10 @@ export interface CreateOrganizationInput {
 
   industry: string;
   location: string;
-
   email: string;
   phone: string;
 
   employees?: number;
-
   status: OrganizationStatus;
 }
 
@@ -71,11 +65,9 @@ export interface UpdateOrganizationInput {
 
   industry: string;
   location: string;
-
   email: string;
   phone: string;
 
   employees?: number;
-
   status: OrganizationStatus;
 }
