@@ -103,7 +103,11 @@ export default function EditOrganization() {
     );
   }
 
-  const organizationForm: OrganizationFormData = {
+  /*
+   * Build the initial form directly from the
+   * organization returned by the query.
+   */
+  const defaultForm: OrganizationFormData = {
     name: organization.name,
     code: organization.code,
     description: organization.description,
@@ -122,14 +126,21 @@ export default function EditOrganization() {
     status: organization.status,
   };
 
-  const formData = form ?? organizationForm;
+  /*
+   * If the user has not edited anything yet,
+   * use the organization data.
+   *
+   * Once the user changes a field, `form` contains
+   * the edited values.
+   */
+  const formData = form ?? defaultForm;
 
   const handleChange = (
     field: keyof OrganizationFormData,
     value: string | number,
   ) => {
     setForm((previous: OrganizationFormData | null) => {
-      const current = previous ?? organizationForm;
+      const current = previous ?? defaultForm;
 
       return {
         ...current,
@@ -137,7 +148,7 @@ export default function EditOrganization() {
       };
     });
 
-    setErrors((previous) => ({
+    setErrors((previous: Record<string, string>) => ({
       ...previous,
       [field]: "",
     }));
@@ -199,6 +210,7 @@ export default function EditOrganization() {
     try {
       await updateOrganization.mutateAsync({
         id: organization.id,
+
         data: {
           name: formData.name.trim(),
 
@@ -412,8 +424,16 @@ export default function EditOrganization() {
                   onChange={(event) =>
                     handleChange("employees", Number(event.target.value))
                   }
-                  className="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm outline-none"
+                  className={`w-full rounded-lg border px-4 py-2.5 text-sm outline-none ${
+                    errors.employees ? "border-red-400" : "border-slate-300"
+                  }`}
                 />
+
+                {errors.employees && (
+                  <p className="mt-1 text-xs text-red-500">
+                    {errors.employees}
+                  </p>
+                )}
               </div>
             </div>
 
