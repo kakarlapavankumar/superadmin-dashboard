@@ -2,429 +2,547 @@ import { useNavigate, useParams } from "react-router-dom";
 import {
   ArrowLeft,
   Building2,
+  Edit,
   Mail,
-  Phone,
   MapPin,
+  Phone,
   Users,
+  Calendar,
+  Hash,
   Briefcase,
-  Pencil,
-  Power,
 } from "lucide-react";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useOrganization } from "../../hooks/useOrganizations";
 
-import {
-  getOrganization,
-  toggleOrganizationStatus,
-} from "../../api/organizationApi";
-
-const OrganizationDetails = () => {
-  const { id } = useParams<{ id: string }>();
+export default function OrganizationDetails() {
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
+  const { id } = useParams();
 
-  const {
-    data: organization,
-    isLoading,
-    isError,
-  } = useQuery({
-    queryKey: ["organization", id],
-    queryFn: () => getOrganization(id as string),
-    enabled: Boolean(id),
-  });
+  const organizationQuery = useOrganization(id);
 
-  const statusMutation = useMutation({
-    mutationFn: () =>
-      toggleOrganizationStatus(id as string),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["organization", id],
-      });
+  const organization = organizationQuery.data;
 
-      queryClient.invalidateQueries({
-        queryKey: ["organizations"],
-      });
-    },
-  });
-
-  if (isLoading) {
+  if (organizationQuery.isLoading) {
     return (
-      <div className="flex min-h-[400px] items-center justify-center">
-        <div className="text-sm text-slate-500">
-          Loading organization...
+      <div className="min-h-screen bg-slate-50 p-6">
+        <div className="mx-auto max-w-6xl">
+          <div className="flex min-h-[400px] items-center justify-center">
+            <div className="text-center">
+              <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-slate-200 border-t-blue-600" />
+
+              <p className="mt-4 text-sm text-slate-500">
+                Loading organization...
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     );
   }
 
-  if (isError || !organization) {
+  if (organizationQuery.isError) {
     return (
-      <div className="p-6">
-        <button
-          onClick={() => navigate("/organizations")}
-          className="mb-6 flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900"
-        >
-          <ArrowLeft size={18} />
-          Back to Organizations
-        </button>
-
-        <div className="rounded-xl border border-red-200 bg-red-50 p-6">
-          <h2 className="font-semibold text-red-700">
-            Organization not found
-          </h2>
-
-          <p className="mt-1 text-sm text-red-600">
-            The organization you are looking for does not exist.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-6 p-6">
-
-      {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-
-        <div>
+      <div className="min-h-screen bg-slate-50 p-6">
+        <div className="mx-auto max-w-6xl">
           <button
+            type="button"
             onClick={() => navigate("/organizations")}
-            className="mb-4 flex items-center gap-2 text-sm text-slate-500 hover:text-slate-900"
+            className="mb-6 inline-flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-slate-900"
           >
-            <ArrowLeft size={17} />
+            <ArrowLeft size={18} />
             Back to Organizations
           </button>
 
-          <div className="flex items-center gap-4">
-            <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-blue-100 text-blue-600">
-              <Building2 size={28} />
+          <div className="rounded-2xl border border-red-200 bg-white p-8 text-center shadow-sm">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
+              <Building2 size={24} className="text-red-600" />
             </div>
 
-            <div>
-              <h1 className="text-2xl font-bold text-slate-900">
-                {organization.name}
-              </h1>
+            <h2 className="mt-4 text-lg font-semibold text-slate-900">
+              Failed to load organization
+            </h2>
 
-              <p className="mt-1 text-sm text-slate-500">
-                Organization ID: {organization.id}
-              </p>
+            <p className="mt-2 text-sm text-slate-500">
+              Something went wrong while loading the organization details.
+            </p>
+
+            <button
+              type="button"
+              onClick={() => organizationQuery.refetch()}
+              className="mt-5 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700"
+            >
+              Try Again
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!organization) {
+    return (
+      <div className="min-h-screen bg-slate-50 p-6">
+        <div className="mx-auto max-w-6xl">
+          <button
+            type="button"
+            onClick={() => navigate("/organizations")}
+            className="mb-6 inline-flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-slate-900"
+          >
+            <ArrowLeft size={18} />
+            Back to Organizations
+          </button>
+
+          <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center shadow-sm">
+            <Building2 size={42} className="mx-auto text-slate-300" />
+
+            <h2 className="mt-4 text-lg font-semibold text-slate-900">
+              Organization not found
+            </h2>
+
+            <p className="mt-2 text-sm text-slate-500">
+              The organization you're looking for doesn't exist.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const handleEdit = () => {
+    navigate(`/organizations/${organization.id}/edit`);
+  };
+
+  const formatDate = (date: string) => {
+    if (!date) {
+      return "-";
+    }
+
+    const parsedDate = new Date(date);
+
+    if (Number.isNaN(parsedDate.getTime())) {
+      return date;
+    }
+
+    return parsedDate.toLocaleDateString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-50 p-6">
+      <div className="mx-auto max-w-6xl">
+        {/* Header */}
+        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <button
+              type="button"
+              onClick={() => navigate("/organizations")}
+              className="mb-3 inline-flex items-center gap-2 text-sm font-medium text-slate-600 transition hover:text-slate-900"
+            >
+              <ArrowLeft size={18} />
+              Back to Organizations
+            </button>
+
+            <div className="flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-600 text-white shadow-sm">
+                <Building2 size={24} />
+              </div>
+
+              <div>
+                <h1 className="text-2xl font-bold text-slate-900">
+                  {organization.name}
+                </h1>
+
+                <p className="mt-1 text-sm text-slate-500">
+                  Organization details and information
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleEdit}
+            className="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
+          >
+            <Edit size={17} />
+            Edit Organization
+          </button>
+        </div>
+
+        {/* Summary Cards */}
+        <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {/* Employees */}
+          <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-slate-500">Employees</p>
+
+                <p className="mt-2 text-2xl font-bold text-slate-900">
+                  {organization.employees.toLocaleString()}
+                </p>
+              </div>
+
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100">
+                <Users size={20} className="text-blue-600" />
+              </div>
+            </div>
+          </div>
+
+          {/* Status */}
+          <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-slate-500">Status</p>
+
+                <div className="mt-2">
+                  <span
+                    className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold ${
+                      organization.status === "Active"
+                        ? "bg-emerald-100 text-emerald-700"
+                        : "bg-red-100 text-red-700"
+                    }`}
+                  >
+                    <span
+                      className={`h-2 w-2 rounded-full ${
+                        organization.status === "Active"
+                          ? "bg-emerald-500"
+                          : "bg-red-500"
+                      }`}
+                    />
+
+                    {organization.status}
+                  </span>
+                </div>
+              </div>
+
+              <div
+                className={`flex h-10 w-10 items-center justify-center rounded-lg ${
+                  organization.status === "Active"
+                    ? "bg-emerald-100"
+                    : "bg-red-100"
+                }`}
+              >
+                <Briefcase
+                  size={20}
+                  className={
+                    organization.status === "Active"
+                      ? "text-emerald-600"
+                      : "text-red-600"
+                  }
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Industry */}
+          <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div className="min-w-0">
+                <p className="text-sm text-slate-500">Industry</p>
+
+                <p className="mt-2 truncate text-lg font-semibold text-slate-900">
+                  {organization.industry || "-"}
+                </p>
+              </div>
+
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-purple-100">
+                <Briefcase size={20} className="text-purple-600" />
+              </div>
+            </div>
+          </div>
+
+          {/* Tenant */}
+          <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div className="min-w-0">
+                <p className="text-sm text-slate-500">Tenant</p>
+
+                <p className="mt-2 truncate text-lg font-semibold text-slate-900">
+                  {organization.tenantName || "-"}
+                </p>
+              </div>
+
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-amber-100">
+                <Building2 size={20} className="text-amber-600" />
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="flex gap-2">
+        {/* Main Content */}
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+          {/* Organization Information */}
+          <div className="lg:col-span-2">
+            <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
+              <div className="border-b border-slate-200 px-6 py-5">
+                <h2 className="text-lg font-semibold text-slate-900">
+                  Organization Information
+                </h2>
+
+                <p className="mt-1 text-sm text-slate-500">
+                  General information about this organization.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 gap-6 p-6 md:grid-cols-2">
+                {/* Name */}
+                <div className="flex gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-100">
+                    <Building2 size={19} className="text-slate-600" />
+                  </div>
+
+                  <div className="min-w-0">
+                    <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                      Organization Name
+                    </p>
+
+                    <p className="mt-1 font-semibold text-slate-900">
+                      {organization.name}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Code */}
+                <div className="flex gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-100">
+                    <Hash size={19} className="text-slate-600" />
+                  </div>
+
+                  <div className="min-w-0">
+                    <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                      Organization Code
+                    </p>
+
+                    <p className="mt-1 font-semibold text-slate-900">
+                      {organization.code}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Tenant */}
+                <div className="flex gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-100">
+                    <Building2 size={19} className="text-slate-600" />
+                  </div>
+
+                  <div className="min-w-0">
+                    <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                      Tenant
+                    </p>
+
+                    <p className="mt-1 font-semibold text-slate-900">
+                      {organization.tenantName || "-"}
+                    </p>
+
+                    <p className="mt-1 text-xs text-slate-500">
+                      Tenant ID: {organization.tenantId}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Industry */}
+                <div className="flex gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-100">
+                    <Briefcase size={19} className="text-slate-600" />
+                  </div>
+
+                  <div className="min-w-0">
+                    <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                      Industry
+                    </p>
+
+                    <p className="mt-1 font-semibold text-slate-900">
+                      {organization.industry || "-"}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Location */}
+                <div className="flex gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-100">
+                    <MapPin size={19} className="text-slate-600" />
+                  </div>
+
+                  <div className="min-w-0">
+                    <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                      Location
+                    </p>
+
+                    <p className="mt-1 font-semibold text-slate-900">
+                      {organization.location || "-"}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Employees */}
+                <div className="flex gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-100">
+                    <Users size={19} className="text-slate-600" />
+                  </div>
+
+                  <div className="min-w-0">
+                    <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                      Employees
+                    </p>
+
+                    <p className="mt-1 font-semibold text-slate-900">
+                      {organization.employees.toLocaleString()}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Description */}
+              <div className="border-t border-slate-200 px-6 py-5">
+                <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                  Description
+                </p>
+
+                <p className="mt-2 text-sm leading-6 text-slate-600">
+                  {organization.description || "No description available."}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Contact Information */}
+          <div>
+            <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
+              <div className="border-b border-slate-200 px-6 py-5">
+                <h2 className="text-lg font-semibold text-slate-900">
+                  Contact Information
+                </h2>
+
+                <p className="mt-1 text-sm text-slate-500">
+                  Organization contact details.
+                </p>
+              </div>
+
+              <div className="space-y-5 p-6">
+                {/* Email */}
+                <div className="flex gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-100">
+                    <Mail size={19} className="text-blue-600" />
+                  </div>
+
+                  <div className="min-w-0">
+                    <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                      Email
+                    </p>
+
+                    <p className="mt-1 break-all text-sm font-medium text-slate-900">
+                      {organization.email || "-"}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Phone */}
+                <div className="flex gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-emerald-100">
+                    <Phone size={19} className="text-emerald-600" />
+                  </div>
+
+                  <div className="min-w-0">
+                    <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                      Phone
+                    </p>
+
+                    <p className="mt-1 text-sm font-medium text-slate-900">
+                      {organization.phone || "-"}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Location */}
+                <div className="flex gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-purple-100">
+                    <MapPin size={19} className="text-purple-600" />
+                  </div>
+
+                  <div className="min-w-0">
+                    <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                      Location
+                    </p>
+
+                    <p className="mt-1 text-sm font-medium text-slate-900">
+                      {organization.location || "-"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Dates */}
+            <div className="mt-6 rounded-2xl border border-slate-200 bg-white shadow-sm">
+              <div className="border-b border-slate-200 px-6 py-5">
+                <h2 className="text-lg font-semibold text-slate-900">
+                  Timeline
+                </h2>
+              </div>
+
+              <div className="space-y-5 p-6">
+                {/* Created */}
+                <div className="flex gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-100">
+                    <Calendar size={19} className="text-slate-600" />
+                  </div>
+
+                  <div>
+                    <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                      Created
+                    </p>
+
+                    <p className="mt-1 text-sm font-medium text-slate-900">
+                      {formatDate(organization.createdAt)}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Updated */}
+                <div className="flex gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-100">
+                    <Calendar size={19} className="text-slate-600" />
+                  </div>
+
+                  <div>
+                    <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                      Last Updated
+                    </p>
+
+                    <p className="mt-1 text-sm font-medium text-slate-900">
+                      {formatDate(organization.updatedAt)}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom Actions */}
+        <div className="mt-6 flex items-center justify-between rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
           <button
-            onClick={() =>
-              navigate(`/organizations/${organization.id}/edit`)
-            }
-            className="flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+            type="button"
+            onClick={() => navigate("/organizations")}
+            className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
           >
-            <Pencil size={16} />
-            Edit
+            <ArrowLeft size={17} />
+            Back
           </button>
 
           <button
-            onClick={() => statusMutation.mutate()}
-            disabled={statusMutation.isPending}
-            className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium ${
-              organization.status === "Active"
-                ? "bg-red-600 text-white hover:bg-red-700"
-                : "bg-emerald-600 text-white hover:bg-emerald-700"
-            }`}
+            type="button"
+            onClick={handleEdit}
+            className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700"
           >
-            <Power size={16} />
-
-            {statusMutation.isPending
-              ? "Updating..."
-              : organization.status === "Active"
-              ? "Deactivate"
-              : "Activate"}
+            <Edit size={17} />
+            Edit Organization
           </button>
         </div>
       </div>
-
-      {/* Status */}
-      <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm font-medium text-slate-500">
-              Organization Status
-            </p>
-
-            <p className="mt-1 text-sm text-slate-400">
-              Current organization status
-            </p>
-          </div>
-
-          <span
-            className={`rounded-full px-3 py-1 text-sm font-semibold ${
-              organization.status === "Active"
-                ? "bg-emerald-100 text-emerald-700"
-                : "bg-red-100 text-red-700"
-            }`}
-          >
-            {organization.status}
-          </span>
-        </div>
-      </div>
-
-      {/* Statistics */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-
-        <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-slate-500">
-                Employees
-              </p>
-
-              <p className="mt-2 text-2xl font-bold text-slate-900">
-                {organization.employees}
-              </p>
-            </div>
-
-            <Users className="text-blue-600" size={24} />
-          </div>
-        </div>
-
-        <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-slate-500">
-                Industry
-              </p>
-
-              <p className="mt-2 text-lg font-semibold text-slate-900">
-                {organization.industry}
-              </p>
-            </div>
-
-            <Briefcase
-              className="text-purple-600"
-              size={24}
-            />
-          </div>
-        </div>
-
-        <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-slate-500">
-                Tenant
-              </p>
-
-              <p className="mt-2 text-lg font-semibold text-slate-900">
-                {organization.tenant}
-              </p>
-            </div>
-
-            <Building2
-              className="text-orange-600"
-              size={24}
-            />
-          </div>
-        </div>
-
-        <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-slate-500">
-                Location
-              </p>
-
-              <p className="mt-2 text-lg font-semibold text-slate-900">
-                {organization.location}
-              </p>
-            </div>
-
-            <MapPin
-              className="text-emerald-600"
-              size={24}
-            />
-          </div>
-        </div>
-
-      </div>
-
-      {/* Organization Information */}
-      <div className="grid gap-6 lg:grid-cols-2">
-
-        <div className="rounded-xl border border-slate-200 bg-white shadow-sm">
-
-          <div className="border-b border-slate-200 p-5">
-            <h2 className="font-semibold text-slate-900">
-              Organization Information
-            </h2>
-          </div>
-
-          <div className="space-y-5 p-5">
-
-            <div>
-              <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
-                Organization Name
-              </p>
-
-              <p className="mt-1 text-sm font-medium text-slate-900">
-                {organization.name}
-              </p>
-            </div>
-
-            <div>
-              <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
-                Tenant
-              </p>
-
-              <p className="mt-1 text-sm text-slate-700">
-                {organization.tenant}
-              </p>
-            </div>
-
-            <div>
-              <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
-                Tenant ID
-              </p>
-
-              <p className="mt-1 text-sm text-slate-700">
-                {organization.tenantId}
-              </p>
-            </div>
-
-            <div>
-              <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
-                Industry
-              </p>
-
-              <p className="mt-1 text-sm text-slate-700">
-                {organization.industry}
-              </p>
-            </div>
-
-            <div>
-              <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
-                Location
-              </p>
-
-              <p className="mt-1 text-sm text-slate-700">
-                {organization.location}
-              </p>
-            </div>
-
-          </div>
-        </div>
-
-        {/* Contact */}
-        <div className="rounded-xl border border-slate-200 bg-white shadow-sm">
-
-          <div className="border-b border-slate-200 p-5">
-            <h2 className="font-semibold text-slate-900">
-              Contact Information
-            </h2>
-          </div>
-
-          <div className="space-y-5 p-5">
-
-            <div className="flex items-center gap-3">
-              <div className="rounded-lg bg-blue-50 p-2">
-                <Mail
-                  size={18}
-                  className="text-blue-600"
-                />
-              </div>
-
-              <div>
-                <p className="text-xs text-slate-400">
-                  Email
-                </p>
-
-                <p className="text-sm font-medium text-slate-800">
-                  {organization.email}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <div className="rounded-lg bg-emerald-50 p-2">
-                <Phone
-                  size={18}
-                  className="text-emerald-600"
-                />
-              </div>
-
-              <div>
-                <p className="text-xs text-slate-400">
-                  Phone
-                </p>
-
-                <p className="text-sm font-medium text-slate-800">
-                  {organization.phone}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <div className="rounded-lg bg-orange-50 p-2">
-                <MapPin
-                  size={18}
-                  className="text-orange-600"
-                />
-              </div>
-
-              <div>
-                <p className="text-xs text-slate-400">
-                  Location
-                </p>
-
-                <p className="text-sm font-medium text-slate-800">
-                  {organization.location}
-                </p>
-              </div>
-            </div>
-
-          </div>
-        </div>
-
-      </div>
-
-      {/* Dates */}
-      <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-        <h2 className="mb-4 font-semibold text-slate-900">
-          Record Information
-        </h2>
-
-        <div className="grid gap-4 sm:grid-cols-2">
-
-          <div>
-            <p className="text-xs text-slate-400">
-              Created At
-            </p>
-
-            <p className="mt-1 text-sm text-slate-700">
-              {new Date(
-                organization.createdAt
-              ).toLocaleDateString()}
-            </p>
-          </div>
-
-          <div>
-            <p className="text-xs text-slate-400">
-              Last Updated
-            </p>
-
-            <p className="mt-1 text-sm text-slate-700">
-              {organization.updatedAt
-                ? new Date(
-                    organization.updatedAt
-                  ).toLocaleDateString()
-                : "Not updated"}
-            </p>
-          </div>
-
-        </div>
-      </div>
-
     </div>
   );
-};
-
-export default OrganizationDetails;
+}

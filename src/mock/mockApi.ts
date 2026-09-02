@@ -1,8 +1,18 @@
-import type { Tenant, TenantFormData, TenantStats } from "../types/tenant";
+import type {
+  Tenant,
+  CreateTenantInput,
+  UpdateTenantInput,
+} from "../types/tenant";
 
 import { tenants } from "./tenants";
 
 let mockTenants: Tenant[] = [...tenants];
+
+export interface TenantStats {
+  total: number;
+  active: number;
+  inactive: number;
+}
 
 export const getMockTenants = async (): Promise<Tenant[]> => {
   return [...mockTenants];
@@ -21,29 +31,35 @@ export const getMockTenant = async (id: number): Promise<Tenant> => {
 export const getMockTenantStats = async (): Promise<TenantStats> => {
   return {
     total: mockTenants.length,
+
     active: mockTenants.filter((tenant) => tenant.status === "Active").length,
+
     inactive: mockTenants.filter((tenant) => tenant.status === "Inactive")
       .length,
   };
 };
 
 export const createMockTenant = async (
-  data: TenantFormData,
+  data: CreateTenantInput,
 ): Promise<Tenant> => {
+  const newId =
+    mockTenants.length > 0
+      ? Math.max(...mockTenants.map((tenant) => tenant.id)) + 1
+      : 1;
+
+  const today = new Date().toISOString().split("T")[0];
+
   const newTenant: Tenant = {
-    id:
-      mockTenants.length > 0
-        ? Math.max(...mockTenants.map((tenant) => tenant.id)) + 1
-        : 1,
-
-    ...data,
-
-    users: 0,
-    organizations: 0,
-
-    createdAt: new Date().toISOString(),
-
-    updatedAt: new Date().toISOString(),
+    id: newId,
+    name: data.name,
+    code: data.code,
+    domain: data.domain,
+    status: data.status,
+    plan: data.plan,
+    users: data.users ?? 0,
+    organizations: data.organizations ?? 0,
+    createdAt: today,
+    updatedAt: today,
   };
 
   mockTenants = [...mockTenants, newTenant];
@@ -53,7 +69,7 @@ export const createMockTenant = async (
 
 export const updateMockTenant = async (
   id: number,
-  data: TenantFormData,
+  data: UpdateTenantInput,
 ): Promise<Tenant> => {
   const index = mockTenants.findIndex((tenant) => tenant.id === id);
 
@@ -61,10 +77,18 @@ export const updateMockTenant = async (
     throw new Error("Tenant not found");
   }
 
+  const today = new Date().toISOString().split("T")[0];
+
   const updatedTenant: Tenant = {
     ...mockTenants[index],
-    ...data,
-    updatedAt: new Date().toISOString(),
+
+    name: data.name,
+    code: data.code,
+    domain: data.domain,
+    status: data.status,
+    plan: data.plan,
+
+    updatedAt: today,
   };
 
   mockTenants[index] = updatedTenant;
@@ -100,13 +124,19 @@ const updateTenantStatus = async (
     throw new Error("Tenant not found");
   }
 
+  const today = new Date().toISOString().split("T")[0];
+
   mockTenants[index] = {
     ...mockTenants[index],
     status,
-    updatedAt: new Date().toISOString(),
+    updatedAt: today,
   };
 
   return {
     ...mockTenants[index],
   };
+};
+
+export const resetMockTenants = async (): Promise<void> => {
+  mockTenants = [...tenants];
 };
