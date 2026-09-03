@@ -2,52 +2,92 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 
 import Layout from "../components/layout/Layout";
 
+// =====================================================
 // Dashboard
+// =====================================================
 import Dashboard from "../pages/Dashboard";
 
-// Tenants Management
+// =====================================================
+// Tenant Management
+// =====================================================
 import Tenants from "../pages/Tenants";
 import CreateTenant from "../pages/CreateTenants";
 import EditTenant from "../pages/EditTenant";
 import TenantDetails from "../pages/TenantDetails";
 
-// Organizations Management
+// =====================================================
+// Organization Management
+// =====================================================
 import Organizations from "../pages/organizations/Organizations";
 import CreateOrganization from "../pages/organizations/CreateOrganization";
 import EditOrganization from "../pages/organizations/EditOrganization";
 import OrganizationDetails from "../pages/organizations/OrganizationDetails";
 
-// Users Management
+// =====================================================
+// User Management
+// =====================================================
 import Users from "../pages/users/Users";
 import CreateUser from "../pages/users/CreateUser";
 import EditUser from "../pages/users/EditUser";
 import UserDetails from "../pages/users/UserDetails";
 
-// Roles Management
+// =====================================================
+// Role Management
+// =====================================================
 import Roles from "../pages/roles/Roles";
 import CreateRole from "../pages/roles/CreateRole";
 import EditRole from "../pages/roles/EditRole";
 import RoleDetails from "../pages/roles/RoleDetails";
 
-// Permissions Management
-
+// =====================================================
+// Permission Management
+// =====================================================
 import Permissions from "../pages/permissions/Permissions";
 import CreatePermission from "../pages/permissions/CreatePermission";
 import EditPermission from "../pages/permissions/EditPermission";
 import PermissionDetails from "../pages/permissions/PermissionDetails";
 
+// =====================================================
+// Data Permission Management
+// =====================================================
+import DataPermissions from "../pages/dataPermissions/DataPermissions";
+import CreateDataPermission from "../pages/dataPermissions/CreateDataPermission";
+import EditDataPermission from "../pages/dataPermissions/EditDataPermission";
+import DataPermissionDetails from "../pages/dataPermissions/DataPermissionDetails";
+
+// =====================================================
+// Platform Configuration
+// =====================================================
+import PlatformConfiguration from "../pages/platform/PlatformConfiguration";
+
+// =====================================================
+// Feature Management
+// =====================================================
+import Features from "../pages/features/Features";
+import CreateFeature from "../pages/features/CreateFeature";
+import EditFeature from "../pages/features/EditFeature";
+import FeatureDetails from "../pages/features/FeatureDetails";
+
 export default function AppRoutes() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* =====================================================
+            MAIN APPLICATION LAYOUT
+        ====================================================== */}
+
         <Route element={<Layout />}>
-          {/* Dashboard */}
+          {/* =====================================================
+              DASHBOARD
+          ====================================================== */}
 
           <Route path="/" element={<Dashboard />} />
 
           <Route path="/dashboard" element={<Dashboard />} />
 
-          {/* Tenants */}
+          {/* =====================================================
+              TENANT MANAGEMENT
+          ====================================================== */}
 
           <Route path="/tenants" element={<Tenants />} />
 
@@ -57,7 +97,9 @@ export default function AppRoutes() {
 
           <Route path="/tenants/:id/edit" element={<EditTenant />} />
 
-          {/* Organizations */}
+          {/* =====================================================
+              ORGANIZATION MANAGEMENT
+          ====================================================== */}
 
           <Route path="/organizations" element={<Organizations />} />
 
@@ -73,7 +115,9 @@ export default function AppRoutes() {
             element={<EditOrganization />}
           />
 
-          {/* Users */}
+          {/* =====================================================
+              USER MANAGEMENT
+          ====================================================== */}
 
           <Route path="/users" element={<Users />} />
 
@@ -83,7 +127,9 @@ export default function AppRoutes() {
 
           <Route path="/users/:id/edit" element={<EditUser />} />
 
-          {/* Roles */}
+          {/* =====================================================
+              ROLE MANAGEMENT
+          ====================================================== */}
 
           <Route path="/roles" element={<Roles />} />
 
@@ -93,7 +139,9 @@ export default function AppRoutes() {
 
           <Route path="/roles/:id/edit" element={<EditRole />} />
 
-          {/* Permissions */}
+          {/* =====================================================
+              PERMISSION MANAGEMENT
+          ====================================================== */}
 
           <Route path="/permissions" element={<Permissions />} />
 
@@ -102,6 +150,45 @@ export default function AppRoutes() {
           <Route path="/permissions/:id" element={<PermissionDetails />} />
 
           <Route path="/permissions/:id/edit" element={<EditPermission />} />
+
+          {/* =====================================================
+              DATA PERMISSION MANAGEMENT
+          ====================================================== */}
+
+          <Route path="/data-permissions" element={<DataPermissions />} />
+
+          <Route
+            path="/data-permissions/create"
+            element={<CreateDataPermission />}
+          />
+
+          <Route
+            path="/data-permissions/:id"
+            element={<DataPermissionDetails />}
+          />
+
+          <Route
+            path="/data-permissions/:id/edit"
+            element={<EditDataPermission />}
+          />
+
+          {/* =====================================================
+              PLATFORM CONFIGURATION
+          ====================================================== */}
+
+          <Route path="/configuration" element={<PlatformConfiguration />} />
+
+          {/* =====================================================
+              FEATURE MANAGEMENT
+          ====================================================== */}
+
+          <Route path="/features" element={<Features />} />
+
+          <Route path="/features/create" element={<CreateFeature />} />
+
+          <Route path="/features/:id" element={<FeatureDetails />} />
+
+          <Route path="/features/:id/edit" element={<EditFeature />} />
         </Route>
       </Routes>
     </BrowserRouter>

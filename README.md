@@ -1,78 +1,90 @@
-# React + TypeScript + Vite
+# Super Admin Portal
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A responsive Super Admin Portal built using React, TypeScript, Vite, Tailwind CSS, and TanStack Query.
 
-Currently, two official plugins are available:
+The application is designed to help a Super Administrator monitor and manage the overall platform from a centralized dashboard.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+---
 
-## React Compiler
+## Project Overview
 
-The React Compiler is enabled on this template. See [this documentation](https://react.dev/learn/react-compiler) for more information.
+The Super Admin Portal provides a centralized interface for managing platform-level operations.
 
-Note: This will impact Vite dev & build performances.
-You can also try [the experimental native React Compiler support in plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md#rust-react-compiler) by using `compiler: true` in the plugin options instead of using the Babel plugin.
+The main purpose of the project is to allow a Super Administrator to:
 
-## Expanding the ESLint configuration
+- Monitor the overall platform
+- Manage tenants
+- Manage organizations
+- Manage users
+- Manage roles
+- Manage permissions
+- Manage data permissions
+- Configure platform settings
+- Manage platform features
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+The application uses reusable React components, TypeScript for type safety, Tailwind CSS for responsive styling, and TanStack Query for server-state management.
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+---
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## Objectives
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+The main objectives of this project are:
 
-```
+1. Build a responsive Super Admin Dashboard.
+2. Provide centralized tenant management.
+3. Provide organization and user management.
+4. Implement role and permission management.
+5. Implement platform configuration.
+6. Implement feature management.
+7. Use reusable components throughout the application.
+8. Use TanStack Query for data fetching and mutations.
+9. Provide search, filtering, pagination, and CRUD operations.
+10. Create a clean and professional admin interface.
 
-You can also install [eslint-plugin-react-x](https://npmx.dev/package/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://npmx.dev/package/eslint-plugin-react-dom) for React-specific lint rules:
+---
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Technologies Used
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+| Technology     | Purpose                       |
+| -------------- | ----------------------------- |
+| React          | Building the user interface   |
+| TypeScript     | Type-safe development         |
+| Vite           | Development and build tool    |
+| Tailwind CSS   | Styling and responsive UI     |
+| TanStack Query | Server-state management       |
+| React Router   | Application routing           |
+| Axios          | API communication             |
+| Lucide React   | Icons                         |
+| Recharts       | Charts and data visualization |
+| JavaScript     | Application logic             |
+| Git            | Version control               |
+| GitHub         | Repository hosting            |
 
+---
+
+## Features
+
+### 1. Global Dashboard
+
+The dashboard provides an overview of the platform.
+
+It includes:
+
+- Total Tenants
+- Active Tenants
+- Inactive Tenants
+- Total Users
+- Active Licenses
+- Tenant Growth Chart
+- Platform Health
+- Recent Activities
+
+Example dashboard metrics:
+
+```text
+Total Tenants       125
+Active Tenants      112
+Inactive Tenants     13
+Total Users       5,240
+Active Licenses      98
 ```
