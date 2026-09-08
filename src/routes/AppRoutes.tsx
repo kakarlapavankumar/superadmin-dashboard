@@ -86,6 +86,47 @@ import Security from "../pages/security/Security";
 // =====================================================
 import AuditLogs from "../pages/auditLogs/AuditLogs";
 
+// =====================================================
+// Notifications
+// =====================================================
+import Notifications from "../pages/notifications/Notifications";
+import CreateNotification from "../pages/notifications/CreateNotification";
+
+// =====================================================
+// Monitoring
+// =====================================================
+import Monitoring from "../pages/monitoring/Monitoring";
+
+// // =====================================================
+// // API Management
+// // =====================================================
+// import ApiManagement from "../pages/apiManagement/ApiManagement";
+// import ApiUsage from "../pages/apiManagement/ApiUsage";
+// import CreateApiKey from "../pages/apiManagement/CreateApiKey";
+
+// // =====================================================
+// // Billing
+// // =====================================================
+// import Billing from "../pages/billing/Billing";
+// import Invoices from "../pages/billing/Invoices";
+// import PaymentHistory from "../pages/billing/PaymentHistory";
+
+// // =====================================================
+// // Reports & Analytics
+// // =====================================================
+// import ReportsAnalytics from "../pages/reports/ReportsAnalytics";
+
+// // =====================================================
+// // Support
+// // =====================================================
+// // IMPORTANT:
+// // These imports require the Support pages to exist.
+// // If you have not created them yet, comment these imports
+// // and routes temporarily.
+// import Support from "../pages/support/Support";
+// import CreateSupportTicket from "../pages/support/CreateSupportTicket";
+// import SupportTicketDetails from "../pages/support/SupportTicketDetails";
+
 export default function AppRoutes() {
   return (
     <BrowserRouter>
@@ -231,15 +272,32 @@ export default function AppRoutes() {
 
           {/* =====================================================
               SECURITY
-          ===================================================== */}
+          ====================================================== */}
 
           <Route path="/security" element={<Security />} />
 
           {/* =====================================================
               AUDIT LOGS
-          ===================================================== */}
+          ====================================================== */}
 
           <Route path="/audit-logs" element={<AuditLogs />} />
+
+          {/* =====================================================
+              NOTIFICATIONS
+          ====================================================== */}
+
+          <Route path="/notifications" element={<Notifications />} />
+
+          <Route
+            path="/notifications/create"
+            element={<CreateNotification />}
+          />
+
+          {/* =====================================================
+              MONITORING
+          ====================================================== */}
+
+          <Route path="/monitoring" element={<Monitoring />} />
         </Route>
       </Routes>
     </BrowserRouter>
