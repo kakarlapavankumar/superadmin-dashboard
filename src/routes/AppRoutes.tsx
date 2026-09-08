@@ -68,12 +68,33 @@ import CreateFeature from "../pages/features/CreateFeature";
 import EditFeature from "../pages/features/EditFeature";
 import FeatureDetails from "../pages/features/FeatureDetails";
 
+// =====================================================
+// Subscription Management
+// =====================================================
+import Subscriptions from "../pages/subscriptions/Subscriptions";
+import CreateSubscription from "../pages/subscriptions/CreateSubscription";
+import EditSubscription from "../pages/subscriptions/EditSubscription";
+import SubscriptionDetails from "../pages/subscriptions/SubscriptionDetails";
+
+// =====================================================
+// Security
+// =====================================================
+import Security from "../pages/security/Security";
+
+// =====================================================
+// Audit Logs
+// =====================================================
+import AuditLogs from "../pages/auditLogs/AuditLogs";
+
 export default function AppRoutes() {
   return (
     <BrowserRouter>
       <Routes>
         {/* =====================================================
             MAIN APPLICATION LAYOUT
+
+            Sidebar + Header stay visible for every page
+            inside this Layout route.
         ====================================================== */}
 
         <Route element={<Layout />}>
@@ -189,6 +210,36 @@ export default function AppRoutes() {
           <Route path="/features/:id" element={<FeatureDetails />} />
 
           <Route path="/features/:id/edit" element={<EditFeature />} />
+
+          {/* =====================================================
+              SUBSCRIPTION MANAGEMENT
+          ====================================================== */}
+
+          <Route path="/subscriptions" element={<Subscriptions />} />
+
+          <Route
+            path="/subscriptions/create"
+            element={<CreateSubscription />}
+          />
+
+          <Route path="/subscriptions/:id" element={<SubscriptionDetails />} />
+
+          <Route
+            path="/subscriptions/:id/edit"
+            element={<EditSubscription />}
+          />
+
+          {/* =====================================================
+              SECURITY
+          ===================================================== */}
+
+          <Route path="/security" element={<Security />} />
+
+          {/* =====================================================
+              AUDIT LOGS
+          ===================================================== */}
+
+          <Route path="/audit-logs" element={<AuditLogs />} />
         </Route>
       </Routes>
     </BrowserRouter>

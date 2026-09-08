@@ -1,20 +1,25 @@
 import type { SubscriptionStatus } from "../../types/subscription";
 
-export default function SubscriptionStatusBadge({
-  status,
-}: {
+interface Props {
   status: SubscriptionStatus;
-}) {
-  const styles = {
-    Active: "bg-emerald-100 text-emerald-700",
-    Inactive: "bg-slate-100 text-slate-600",
-    Trial: "bg-blue-100 text-blue-700",
-    Expired: "bg-red-100 text-red-700",
+}
+
+export default function SubscriptionStatusBadge({ status }: Props) {
+  const styles: Record<SubscriptionStatus, string> = {
+    Active: "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200",
+
+    Trial: "bg-blue-50 text-blue-700 ring-1 ring-blue-200",
+
+    Suspended: "bg-amber-50 text-amber-700 ring-1 ring-amber-200",
+
+    Cancelled: "bg-slate-100 text-slate-600 ring-1 ring-slate-200",
+
+    Expired: "bg-red-50 text-red-700 ring-1 ring-red-200",
   };
 
   return (
     <span
-      className={`rounded-full px-2.5 py-1 text-xs font-semibold ${styles[status]}`}
+      className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${styles[status]}`}
     >
       {status}
     </span>

@@ -1,38 +1,66 @@
-import { licenses, subscriptions } from "../mock/subscriptions";
-import type { License, Subscription } from "../types/subscription";
+import type {
+  Subscription,
+  CreateSubscriptionInput,
+  UpdateSubscriptionInput,
+  SubscriptionStatus,
+} from "../types/subscription";
 
-const subscriptionData = [...subscriptions];
+import { subscriptions } from "../mock/subscriptions";
 
-export const getSubscriptions = async (): Promise<Subscription[]> => {
-  await new Promise((resolve) => setTimeout(resolve, 400));
+let subscriptionData = [...subscriptions];
+
+const delay = (ms = 400) => new Promise((resolve) => setTimeout(resolve, ms));
+
+export async function getSubscriptions(): Promise<Subscription[]> {
+  await delay();
+
   return [...subscriptionData];
-};
+}
 
-export const getSubscription = async (
-  id: number,
-): Promise<Subscription | undefined> => {
-  return subscriptionData.find((item) => item.id === id);
-};
+export async function getSubscription(id: number): Promise<Subscription> {
+  await delay();
 
-export const createSubscription = async (
-  data: Omit<Subscription, "id" | "createdAt" | "tenantCount">,
-): Promise<Subscription> => {
-  const item: Subscription = {
-    ...data,
-    id: Date.now(),
-    tenantCount: 0,
+  const subscription = subscriptionData.find((item) => item.id === id);
+
+  if (!subscription) {
+    throw new Error("Subscription not found");
+  }
+
+  return { ...subscription };
+}
+
+export async function createSubscription(
+  payload: CreateSubscriptionInput,
+): Promise<Subscription> {
+  await delay();
+
+  const newSubscription: Subscription = {
+    id:
+      subscriptionData.length > 0
+        ? Math.max(...subscriptionData.map((item) => item.id)) + 1
+        : 1,
+
+    ...payload,
+
+    usedUsers: 0,
+    usedStorage: 0,
+    usedApiCalls: 0,
+
     createdAt: new Date().toISOString().split("T")[0],
+    updatedAt: new Date().toISOString().split("T")[0],
   };
 
-  subscriptionData.push(item);
+  subscriptionData.push(newSubscription);
 
-  return item;
-};
+  return { ...newSubscription };
+}
 
-export const updateSubscription = async (
+export async function updateSubscription(
   id: number,
-  data: Partial<Subscription>,
-): Promise<Subscription> => {
+  payload: UpdateSubscriptionInput,
+): Promise<Subscription> {
+  await delay();
+
   const index = subscriptionData.findIndex((item) => item.id === id);
 
   if (index === -1) {
@@ -41,13 +69,60 @@ export const updateSubscription = async (
 
   subscriptionData[index] = {
     ...subscriptionData[index],
-    ...data,
+    ...payload,
+    updatedAt: new Date().toISOString().split("T")[0],
   };
 
-  return subscriptionData[index];
-};
+  return { ...subscriptionData[index] };
+}
 
-export const getLicenses = async (): Promise<License[]> => {
-  await new Promise((resolve) => setTimeout(resolve, 400));
-  return [...licenses];
-};
+export async function deleteSubscription(id: number): Promise<void> {
+  await delay();
+
+  const exists = subscriptionData.some((item) => item.id === id);
+
+  if (!exists) {
+    throw new Error("Subscription not found");
+  }
+
+  subscriptionData = subscriptionData.filter((item) => item.id !== id);
+}
+
+export async function updateSubscriptionStatus(
+  id: number,
+  status: SubscriptionStatus,
+): Promise<Subscription> {
+  await delay();
+
+  const index = subscriptionData.findIndex((item) => item.id === id);
+
+  if (index === -1) {
+    throw new Error("Subscription not found");
+  }
+
+  subscriptionData[index] = {
+    ...subscriptionData[index],
+    status,
+    updatedAt: new Date().toISOString().split("T")[0],
+  };
+
+  return { ...subscriptionData[index] };
+}
+
+export async function toggleAutoRenew(id: number): Promise<Subscription> {
+  await delay();
+
+  const index = subscriptionData.findIndex((item) => item.id === id);
+
+  if (index === -1) {
+    throw new Error("Subscription not found");
+  }
+
+  subscriptionData[index] = {
+    ...subscriptionData[index],
+    autoRenew: !subscriptionData[index].autoRenew,
+    updatedAt: new Date().toISOString().split("T")[0],
+  };
+
+  return { ...subscriptionData[index] };
+}
