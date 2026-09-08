@@ -10,7 +10,7 @@ import {
 
 import SecurityMetricCard from "../../components/security/securityMetricCard";
 import SecuritySettingRow from "../../components/security/SecuritySettingRow";
-import SecurityEventRow from "../../components/security/SecurityEventrow";
+import SecurityEventRow from "../../components/security/SecurityEventRow";
 
 import Spinner from "../../components/Spinner";
 import ErrorMessage from "../../components/ErrorMessage";
