@@ -10,40 +10,39 @@ export interface AuthUser {
 export interface AuthSession {
   user: AuthUser;
   token: string;
+  loginAt: string;
 }
 
-const DEMO_USER = {
-  email: "admin@superadmin.com",
-  password: "Admin@123",
-};
+const DEMO_EMAIL = "admin@superadmin.com";
+const DEMO_PASSWORD = "Admin@123";
 
-const DEMO_SESSION: AuthSession = {
-  user: {
-    id: "super-admin-001",
-    name: "Super Administrator",
-    email: "admin@superadmin.com",
-    role: "super_admin",
-  },
-  token: "demo-super-admin-token",
-};
-
-/**
- * Login user
- */
 export function login(
   email: string,
   password: string,
 ): {
   success: boolean;
+  session?: AuthSession;
   message?: string;
 } {
   const normalizedEmail = email.trim().toLowerCase();
 
-  if (normalizedEmail === DEMO_USER.email && password === DEMO_USER.password) {
-    localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(DEMO_SESSION));
+  if (normalizedEmail === DEMO_EMAIL && password === DEMO_PASSWORD) {
+    const session: AuthSession = {
+      user: {
+        id: "super-admin-001",
+        name: "Super Administrator",
+        email: DEMO_EMAIL,
+        role: "super_admin",
+      },
+      token: "demo-super-admin-token",
+      loginAt: new Date().toISOString(),
+    };
+
+    localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(session));
 
     return {
       success: true,
+      session,
     };
   }
 
@@ -53,16 +52,10 @@ export function login(
   };
 }
 
-/**
- * Logout user
- */
 export function logout(): void {
   localStorage.removeItem(AUTH_STORAGE_KEY);
 }
 
-/**
- * Get current authentication session
- */
 export function getSession(): AuthSession | null {
   const storedSession = localStorage.getItem(AUTH_STORAGE_KEY);
 
@@ -79,30 +72,28 @@ export function getSession(): AuthSession | null {
       !session.token ||
       session.user.role !== "super_admin"
     ) {
-      localStorage.removeItem(AUTH_STORAGE_KEY);
+      logout();
       return null;
     }
 
     return session;
-  } catch (error) {
-    console.error("Invalid authentication session:", error);
-
-    localStorage.removeItem(AUTH_STORAGE_KEY);
-
+  } catch {
+    logout();
     return null;
   }
 }
 
-/**
- * Check whether user is authenticated
- */
+export function getCurrentUser(): AuthUser | null {
+  return getSession()?.user ?? null;
+}
+
 export function isAuthenticated(): boolean {
   return getSession() !== null;
 }
 
-/**
- * Get currently logged-in user
- */
-export function getCurrentUser(): AuthUser | null {
-  return getSession()?.user ?? null;
+export function getDemoCredentials() {
+  return {
+    email: DEMO_EMAIL,
+    password: DEMO_PASSWORD,
+  };
 }

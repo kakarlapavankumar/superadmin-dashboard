@@ -1,18 +1,27 @@
-import { Eye, EyeOff, LockKeyhole, Mail } from "lucide-react";
-import { useState } from "react";
-import type { FormEvent } from "react";
+import { Eye, EyeOff, LockKeyhole, Mail, ShieldCheck } from "lucide-react";
+
+import { useState, type FormEvent } from "react";
+
 import { useLocation, useNavigate } from "react-router-dom";
 
-import { login } from "../../auth/authService";
+import { getDemoCredentials } from "../../auth/authService";
+
+import { useAuth } from "../../auth/useAuth";
 
 export default function LoginForm() {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const { login } = useAuth();
+
+  const demoCredentials = getDemoCredentials();
+
   const [email, setEmail] = useState("");
+
   const [password, setPassword] = useState("");
 
   const [showPassword, setShowPassword] = useState(false);
+
   const [error, setError] = useState("");
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -20,9 +29,15 @@ export default function LoginForm() {
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
+    if (isSubmitting) {
+      return;
+    }
+
     setError("");
 
-    if (!email.trim()) {
+    const trimmedEmail = email.trim();
+
+    if (!trimmedEmail) {
       setError("Please enter your email address.");
       return;
     }
@@ -34,155 +49,167 @@ export default function LoginForm() {
 
     setIsSubmitting(true);
 
-    window.setTimeout(() => {
-      const result = login(email, password);
+    const result = login(trimmedEmail, password);
 
-      if (!result.success) {
-        setError(result.message ?? "Unable to sign in.");
-        setIsSubmitting(false);
-        return;
-      }
+    if (!result.success) {
+      setError(result.message ?? "Unable to sign in. Please try again.");
 
-      const from =
-        (location.state as { from?: string } | null | undefined)?.from ?? "/";
+      setIsSubmitting(false);
+      return;
+    }
 
-      navigate(from, { replace: true });
-    }, 500);
+    const state = location.state as { from?: string } | null | undefined;
+
+    const destination =
+      state?.from && state.from !== "/login" ? state.from : "/dashboard";
+
+    navigate(destination, {
+      replace: true,
+    });
+
+    setIsSubmitting(false);
   };
 
   const fillDemoCredentials = () => {
-    setEmail("admin@superadmin.com");
-    setPassword("Admin@123");
+    setEmail(demoCredentials.email);
+
+    setPassword(demoCredentials.password);
+
     setError("");
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5" noValidate>
-      {/* Error */}
-      {error && (
-        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3">
-          <p className="text-sm font-medium text-red-700">{error}</p>
+    <div className="w-full max-w-md">
+      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xl shadow-slate-200/50 sm:p-8">
+        {/* Logo */}
+        <div className="mb-8 flex justify-center">
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-900">
+            <ShieldCheck className="h-7 w-7 text-white" />
+          </div>
         </div>
-      )}
 
-      {/* Email */}
-      <div>
-        <label
-          htmlFor="email"
-          className="mb-2 block text-sm font-medium text-slate-700"
-        >
-          Email address
-        </label>
+        {/* Heading */}
+        <div className="mb-8 text-center">
+          <h1 className="text-2xl font-bold text-slate-900">Welcome Back</h1>
 
-        <div className="relative">
-          <Mail
-            size={18}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-          />
-
-          <input
-            id="email"
-            name="email"
-            type="email"
-            autoComplete="email"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            placeholder="admin@superadmin.com"
-            className="w-full rounded-xl border border-slate-300 bg-white py-3 pl-10 pr-4 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
-          />
+          <p className="mt-2 text-sm text-slate-500">
+            Sign in to your Super Admin Portal
+          </p>
         </div>
-      </div>
 
-      {/* Password */}
-      <div>
-        <label
-          htmlFor="password"
-          className="mb-2 block text-sm font-medium text-slate-700"
-        >
-          Password
-        </label>
+        {/* Error */}
+        {error && (
+          <div className="mb-5 rounded-lg border border-red-200 bg-red-50 px-4 py-3">
+            <p className="text-sm font-medium text-red-700">{error}</p>
+          </div>
+        )}
 
-        <div className="relative">
-          <LockKeyhole
-            size={18}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-          />
-
-          <input
-            id="password"
-            name="password"
-            type={showPassword ? "text" : "password"}
-            autoComplete="current-password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            placeholder="Enter your password"
-            className="w-full rounded-xl border border-slate-300 bg-white py-3 pl-10 pr-12 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
-          />
-
-          <button
-            type="button"
-            onClick={() => setShowPassword((current) => !current)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 rounded-lg p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
-            aria-label={showPassword ? "Hide password" : "Show password"}
-          >
-            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-          </button>
-        </div>
-      </div>
-
-      {/* Remember / Forgot */}
-      <div className="flex items-center justify-between">
-        <label className="flex cursor-pointer items-center gap-2">
-          <input
-            type="checkbox"
-            className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
-          />
-
-          <span className="text-sm text-slate-600">Remember me</span>
-        </label>
-
-        <button
-          type="button"
-          onClick={() =>
-            setError(
-              "Please contact your platform administrator to reset your password.",
-            )
-          }
-          className="text-sm font-medium text-blue-600 hover:text-blue-700"
-        >
-          Forgot password?
-        </button>
-      </div>
-
-      {/* Submit */}
-      <button
-        type="submit"
-        disabled={isSubmitting}
-        className="flex w-full items-center justify-center rounded-xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-600/20 transition hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-200 disabled:cursor-not-allowed disabled:opacity-60"
-      >
-        {isSubmitting ? "Signing in..." : "Sign in"}
-      </button>
-
-      {/* Demo Account */}
-      <div className="rounded-xl border border-blue-100 bg-blue-50 p-4">
-        <div className="flex items-start justify-between gap-4">
+        {/* Login Form */}
+        <form onSubmit={handleSubmit} className="space-y-5">
+          {/* Email */}
           <div>
-            <p className="text-sm font-semibold text-blue-900">Demo account</p>
+            <label
+              htmlFor="email"
+              className="mb-2 block text-sm font-medium text-slate-700"
+            >
+              Email Address
+            </label>
 
-            <p className="mt-1 text-xs text-blue-700">admin@superadmin.com</p>
+            <div className="relative">
+              <Mail className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
 
-            <p className="text-xs text-blue-700">Password: Admin@123</p>
+              <input
+                id="email"
+                type="email"
+                autoComplete="email"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                placeholder="Enter your email"
+                className="w-full rounded-lg border border-slate-300 bg-white py-3 pl-10 pr-4 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10"
+              />
+            </div>
           </div>
 
+          {/* Password */}
+          <div>
+            <label
+              htmlFor="password"
+              className="mb-2 block text-sm font-medium text-slate-700"
+            >
+              Password
+            </label>
+
+            <div className="relative">
+              <LockKeyhole className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+
+              <input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                autoComplete="current-password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                placeholder="Enter your password"
+                className="w-full rounded-lg border border-slate-300 bg-white py-3 pl-10 pr-12 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10"
+              />
+
+              <button
+                type="button"
+                onClick={() => setShowPassword((current) => !current)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700"
+              >
+                {showPassword ? (
+                  <EyeOff className="h-5 w-5" />
+                ) : (
+                  <Eye className="h-5 w-5" />
+                )}
+              </button>
+            </div>
+          </div>
+
+          {/* Sign In */}
           <button
-            type="button"
-            onClick={fillDemoCredentials}
-            className="shrink-0 rounded-lg bg-white px-3 py-2 text-xs font-semibold text-blue-700 shadow-sm ring-1 ring-blue-200 transition hover:bg-blue-100"
+            type="submit"
+            disabled={isSubmitting}
+            className="flex w-full items-center justify-center rounded-lg bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            Use demo
+            {isSubmitting ? "Signing in..." : "Sign In"}
           </button>
+        </form>
+
+        {/* Demo Credentials */}
+        <div className="mt-6 rounded-xl border border-blue-100 bg-blue-50 p-4">
+          <div className="mb-3 flex items-center justify-between">
+            <p className="text-sm font-semibold text-blue-900">
+              Demo Credentials
+            </p>
+
+            <button
+              type="button"
+              onClick={fillDemoCredentials}
+              className="text-xs font-semibold text-blue-700 hover:text-blue-900"
+            >
+              Use Demo Login
+            </button>
+          </div>
+
+          <div className="space-y-1 text-xs text-blue-800">
+            <p>
+              <span className="font-medium">Email:</span>{" "}
+              {demoCredentials.email}
+            </p>
+
+            <p>
+              <span className="font-medium">Password:</span>{" "}
+              {demoCredentials.password}
+            </p>
+          </div>
         </div>
+
+        {/* Footer */}
+        <p className="mt-8 text-center text-xs text-slate-400">
+          Super Admin Portal
+        </p>
       </div>
-    </form>
+    </div>
   );
 }
