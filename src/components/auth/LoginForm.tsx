@@ -3,7 +3,7 @@ import { useState } from "react";
 import type { FormEvent } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
-import { login } from "../../auth/authservice";
+import { login } from "../../auth/authService";
 
 export default function LoginForm() {
   const navigate = useNavigate();

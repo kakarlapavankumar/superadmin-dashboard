@@ -27,14 +27,19 @@ const DEMO_SESSION: AuthSession = {
   token: "demo-super-admin-token",
 };
 
+/**
+ * Login user
+ */
 export function login(
   email: string,
   password: string,
-): { success: boolean; message?: string } {
-  if (
-    email.trim().toLowerCase() === DEMO_USER.email &&
-    password === DEMO_USER.password
-  ) {
+): {
+  success: boolean;
+  message?: string;
+} {
+  const normalizedEmail = email.trim().toLowerCase();
+
+  if (normalizedEmail === DEMO_USER.email && password === DEMO_USER.password) {
     localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(DEMO_SESSION));
 
     return {
@@ -48,29 +53,56 @@ export function login(
   };
 }
 
+/**
+ * Logout user
+ */
 export function logout(): void {
   localStorage.removeItem(AUTH_STORAGE_KEY);
 }
 
+/**
+ * Get current authentication session
+ */
 export function getSession(): AuthSession | null {
-  const session = localStorage.getItem(AUTH_STORAGE_KEY);
+  const storedSession = localStorage.getItem(AUTH_STORAGE_KEY);
 
-  if (!session) {
+  if (!storedSession) {
     return null;
   }
 
   try {
-    return JSON.parse(session) as AuthSession;
-  } catch {
+    const session = JSON.parse(storedSession) as AuthSession;
+
+    if (
+      !session ||
+      !session.user ||
+      !session.token ||
+      session.user.role !== "super_admin"
+    ) {
+      localStorage.removeItem(AUTH_STORAGE_KEY);
+      return null;
+    }
+
+    return session;
+  } catch (error) {
+    console.error("Invalid authentication session:", error);
+
     localStorage.removeItem(AUTH_STORAGE_KEY);
+
     return null;
   }
 }
 
+/**
+ * Check whether user is authenticated
+ */
 export function isAuthenticated(): boolean {
   return getSession() !== null;
 }
 
+/**
+ * Get currently logged-in user
+ */
 export function getCurrentUser(): AuthUser | null {
   return getSession()?.user ?? null;
 }
