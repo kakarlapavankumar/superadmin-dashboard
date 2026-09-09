@@ -1,6 +1,13 @@
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+
+import ProtectedRoute from "../auth/Protectedroute";
 
 import Layout from "../components/layout/Layout";
+
+// =====================================================
+// Authentication
+// =====================================================
+import Login from "../pages/auth/Login";
 
 // =====================================================
 // Dashboard
@@ -97,208 +104,261 @@ import CreateNotification from "../pages/notifications/CreateNotification";
 // =====================================================
 import Monitoring from "../pages/monitoring/Monitoring";
 
-// // =====================================================
-// // API Management
-// // =====================================================
-// import ApiManagement from "../pages/apiManagement/ApiManagement";
-// import ApiUsage from "../pages/apiManagement/ApiUsage";
-// import CreateApiKey from "../pages/apiManagement/CreateApiKey";
+// =====================================================
+// API Management
+// =====================================================
+import ApiManagement from "../pages/apiManagement/ApiManagement";
+import ApiUsage from "../pages/apiManagement/ApiUsage";
+import CreateApiKey from "../pages/apiManagement/CreateApiKey";
 
-// // =====================================================
-// // Billing
-// // =====================================================
-// import Billing from "../pages/billing/Billing";
-// import Invoices from "../pages/billing/Invoices";
-// import PaymentHistory from "../pages/billing/PaymentHistory";
+// =====================================================
+// Billing
+// =====================================================
+import Billing from "../pages/billing/Billing";
+import Invoices from "../pages/billing/Invoices";
+import PaymentHistory from "../pages/billing/PaymentHistory";
 
-// // =====================================================
-// // Reports & Analytics
-// // =====================================================
-// import ReportsAnalytics from "../pages/reports/ReportsAnalytics";
+// =====================================================
+// Reports & Analytics
+// =====================================================
+import ReportsAnalytics from "../pages/reports/ReportsAnalytics";
 
-// // =====================================================
-// // Support
-// // =====================================================
-// // IMPORTANT:
-// // These imports require the Support pages to exist.
-// // If you have not created them yet, comment these imports
-// // and routes temporarily.
-// import Support from "../pages/support/Support";
-// import CreateSupportTicket from "../pages/support/CreateSupportTicket";
-// import SupportTicketDetails from "../pages/support/SupportTicketDetails";
+// =====================================================
+// Support
+// =====================================================
+import Support from "../pages/support/Support";
+import CreateSupportTicket from "../pages/support/CreateSupportTicket";
+import SupportTicketDetails from "../pages/support/SupportTicketDetails";
 
 export default function AppRoutes() {
   return (
     <BrowserRouter>
       <Routes>
         {/* =====================================================
-            MAIN APPLICATION LAYOUT
-
-            Sidebar + Header stay visible for every page
-            inside this Layout route.
+            PUBLIC ROUTES
         ====================================================== */}
 
-        <Route element={<Layout />}>
-          {/* =====================================================
-              DASHBOARD
-          ====================================================== */}
+        {/* Login page does NOT use Layout */}
+        <Route path="/login" element={<Login />} />
 
-          <Route path="/" element={<Dashboard />} />
+        {/* =====================================================
+            PROTECTED APPLICATION
+        ====================================================== */}
 
-          <Route path="/dashboard" element={<Dashboard />} />
+        <Route element={<ProtectedRoute />}>
+          <Route element={<Layout />}>
+            {/* =====================================================
+                DASHBOARD
+            ====================================================== */}
 
-          {/* =====================================================
-              TENANT MANAGEMENT
-          ====================================================== */}
+            <Route path="/" element={<Dashboard />} />
 
-          <Route path="/tenants" element={<Tenants />} />
+            <Route path="/dashboard" element={<Dashboard />} />
 
-          <Route path="/tenants/create" element={<CreateTenant />} />
+            {/* =====================================================
+                TENANT MANAGEMENT
+            ====================================================== */}
 
-          <Route path="/tenants/:id" element={<TenantDetails />} />
+            <Route path="/tenants" element={<Tenants />} />
 
-          <Route path="/tenants/:id/edit" element={<EditTenant />} />
+            <Route path="/tenants/create" element={<CreateTenant />} />
 
-          {/* =====================================================
-              ORGANIZATION MANAGEMENT
-          ====================================================== */}
+            <Route path="/tenants/:id" element={<TenantDetails />} />
 
-          <Route path="/organizations" element={<Organizations />} />
+            <Route path="/tenants/:id/edit" element={<EditTenant />} />
 
-          <Route
-            path="/organizations/create"
-            element={<CreateOrganization />}
-          />
+            {/* =====================================================
+                ORGANIZATION MANAGEMENT
+            ====================================================== */}
 
-          <Route path="/organizations/:id" element={<OrganizationDetails />} />
+            <Route path="/organizations" element={<Organizations />} />
 
-          <Route
-            path="/organizations/:id/edit"
-            element={<EditOrganization />}
-          />
+            <Route
+              path="/organizations/create"
+              element={<CreateOrganization />}
+            />
 
-          {/* =====================================================
-              USER MANAGEMENT
-          ====================================================== */}
+            <Route
+              path="/organizations/:id"
+              element={<OrganizationDetails />}
+            />
 
-          <Route path="/users" element={<Users />} />
+            <Route
+              path="/organizations/:id/edit"
+              element={<EditOrganization />}
+            />
 
-          <Route path="/users/create" element={<CreateUser />} />
+            {/* =====================================================
+                USER MANAGEMENT
+            ====================================================== */}
 
-          <Route path="/users/:id" element={<UserDetails />} />
+            <Route path="/users" element={<Users />} />
 
-          <Route path="/users/:id/edit" element={<EditUser />} />
+            <Route path="/users/create" element={<CreateUser />} />
 
-          {/* =====================================================
-              ROLE MANAGEMENT
-          ====================================================== */}
+            <Route path="/users/:id" element={<UserDetails />} />
 
-          <Route path="/roles" element={<Roles />} />
+            <Route path="/users/:id/edit" element={<EditUser />} />
 
-          <Route path="/roles/create" element={<CreateRole />} />
+            {/* =====================================================
+                ROLE MANAGEMENT
+            ====================================================== */}
 
-          <Route path="/roles/:id" element={<RoleDetails />} />
+            <Route path="/roles" element={<Roles />} />
 
-          <Route path="/roles/:id/edit" element={<EditRole />} />
+            <Route path="/roles/create" element={<CreateRole />} />
 
-          {/* =====================================================
-              PERMISSION MANAGEMENT
-          ====================================================== */}
+            <Route path="/roles/:id" element={<RoleDetails />} />
 
-          <Route path="/permissions" element={<Permissions />} />
+            <Route path="/roles/:id/edit" element={<EditRole />} />
 
-          <Route path="/permissions/create" element={<CreatePermission />} />
+            {/* =====================================================
+                PERMISSION MANAGEMENT
+            ====================================================== */}
 
-          <Route path="/permissions/:id" element={<PermissionDetails />} />
+            <Route path="/permissions" element={<Permissions />} />
 
-          <Route path="/permissions/:id/edit" element={<EditPermission />} />
+            <Route path="/permissions/create" element={<CreatePermission />} />
 
-          {/* =====================================================
-              DATA PERMISSION MANAGEMENT
-          ====================================================== */}
+            <Route path="/permissions/:id" element={<PermissionDetails />} />
 
-          <Route path="/data-permissions" element={<DataPermissions />} />
+            <Route path="/permissions/:id/edit" element={<EditPermission />} />
 
-          <Route
-            path="/data-permissions/create"
-            element={<CreateDataPermission />}
-          />
+            {/* =====================================================
+                DATA PERMISSION MANAGEMENT
+            ====================================================== */}
 
-          <Route
-            path="/data-permissions/:id"
-            element={<DataPermissionDetails />}
-          />
+            <Route path="/data-permissions" element={<DataPermissions />} />
 
-          <Route
-            path="/data-permissions/:id/edit"
-            element={<EditDataPermission />}
-          />
+            <Route
+              path="/data-permissions/create"
+              element={<CreateDataPermission />}
+            />
 
-          {/* =====================================================
-              PLATFORM CONFIGURATION
-          ====================================================== */}
+            <Route
+              path="/data-permissions/:id"
+              element={<DataPermissionDetails />}
+            />
 
-          <Route path="/configuration" element={<PlatformConfiguration />} />
+            <Route
+              path="/data-permissions/:id/edit"
+              element={<EditDataPermission />}
+            />
 
-          {/* =====================================================
-              FEATURE MANAGEMENT
-          ====================================================== */}
+            {/* =====================================================
+                PLATFORM CONFIGURATION
+            ====================================================== */}
 
-          <Route path="/features" element={<Features />} />
+            <Route path="/configuration" element={<PlatformConfiguration />} />
 
-          <Route path="/features/create" element={<CreateFeature />} />
+            {/* =====================================================
+                FEATURE MANAGEMENT
+            ====================================================== */}
 
-          <Route path="/features/:id" element={<FeatureDetails />} />
+            <Route path="/features" element={<Features />} />
 
-          <Route path="/features/:id/edit" element={<EditFeature />} />
+            <Route path="/features/create" element={<CreateFeature />} />
 
-          {/* =====================================================
-              SUBSCRIPTION MANAGEMENT
-          ====================================================== */}
+            <Route path="/features/:id" element={<FeatureDetails />} />
 
-          <Route path="/subscriptions" element={<Subscriptions />} />
+            <Route path="/features/:id/edit" element={<EditFeature />} />
 
-          <Route
-            path="/subscriptions/create"
-            element={<CreateSubscription />}
-          />
+            {/* =====================================================
+                SUBSCRIPTION MANAGEMENT
+            ====================================================== */}
 
-          <Route path="/subscriptions/:id" element={<SubscriptionDetails />} />
+            <Route path="/subscriptions" element={<Subscriptions />} />
 
-          <Route
-            path="/subscriptions/:id/edit"
-            element={<EditSubscription />}
-          />
+            <Route
+              path="/subscriptions/create"
+              element={<CreateSubscription />}
+            />
 
-          {/* =====================================================
-              SECURITY
-          ====================================================== */}
+            <Route
+              path="/subscriptions/:id"
+              element={<SubscriptionDetails />}
+            />
 
-          <Route path="/security" element={<Security />} />
+            <Route
+              path="/subscriptions/:id/edit"
+              element={<EditSubscription />}
+            />
 
-          {/* =====================================================
-              AUDIT LOGS
-          ====================================================== */}
+            {/* =====================================================
+                SECURITY
+            ====================================================== */}
 
-          <Route path="/audit-logs" element={<AuditLogs />} />
+            <Route path="/security" element={<Security />} />
 
-          {/* =====================================================
-              NOTIFICATIONS
-          ====================================================== */}
+            {/* =====================================================
+                AUDIT LOGS
+            ====================================================== */}
 
-          <Route path="/notifications" element={<Notifications />} />
+            <Route path="/audit-logs" element={<AuditLogs />} />
 
-          <Route
-            path="/notifications/create"
-            element={<CreateNotification />}
-          />
+            {/* =====================================================
+                NOTIFICATIONS
+            ====================================================== */}
 
-          {/* =====================================================
-              MONITORING
-          ====================================================== */}
+            <Route path="/notifications" element={<Notifications />} />
 
-          <Route path="/monitoring" element={<Monitoring />} />
+            <Route
+              path="/notifications/create"
+              element={<CreateNotification />}
+            />
+
+            {/* =====================================================
+                MONITORING
+            ====================================================== */}
+
+            <Route path="/monitoring" element={<Monitoring />} />
+
+            {/* =====================================================
+                API MANAGEMENT
+            ====================================================== */}
+
+            <Route path="/api-management" element={<ApiManagement />} />
+
+            <Route path="/api-management/usage" element={<ApiUsage />} />
+
+            <Route path="/api-management/create" element={<CreateApiKey />} />
+
+            {/* =====================================================
+                BILLING
+            ====================================================== */}
+
+            <Route path="/billing" element={<Billing />} />
+
+            <Route path="/billing/invoices" element={<Invoices />} />
+
+            <Route
+              path="/billing/payment-history"
+              element={<PaymentHistory />}
+            />
+
+            {/* =====================================================
+                REPORTS & ANALYTICS
+            ====================================================== */}
+
+            <Route path="/reports" element={<ReportsAnalytics />} />
+
+            {/* =====================================================
+                SUPPORT
+            ====================================================== */}
+
+            <Route path="/support" element={<Support />} />
+
+            <Route path="/support/create" element={<CreateSupportTicket />} />
+
+            <Route path="/support/:id" element={<SupportTicketDetails />} />
+          </Route>
         </Route>
+
+        {/* =====================================================
+            FALLBACK
+        ====================================================== */}
+
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
   );
